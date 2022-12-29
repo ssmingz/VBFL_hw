@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch IntraGenTree",
+            "request": "launch",
+            "mainClass": "fl.weka.IntraGenTree",
+            "projectName": "VBFL_hw_59fa49a5"
+        },
+        {
+            "type": "java",
             "name": "Launch RandomTree2",
             "request": "launch",
             "mainClass": "fl.weka.RandomTree2",

@@ -1,0 +1,15 @@
+2022-12-29 18:19:24  [ main:0 ] - [ INFO ]  Successfully build tree in round : 1
+2022-12-29 18:19:24  [ main:5 ] - [ INFO ]  Successfully build tree in round : 2
+2022-12-29 18:19:24  [ main:8 ] - [ INFO ]  Successfully build tree in round : 3
+2022-12-29 18:19:24  [ main:13 ] - [ INFO ]  Successfully build tree in round : 4
+2022-12-29 18:19:24  [ main:17 ] - [ INFO ]  Successfully build tree in round : 5
+2022-12-29 18:19:24  [ main:21 ] - [ INFO ]  Successfully build tree in round : 6
+2022-12-29 18:19:24  [ main:25 ] - [ INFO ]  Successfully build tree in round : 7
+2022-12-29 18:19:24  [ main:28 ] - [ INFO ]  Successfully build tree in round : 8
+2022-12-29 18:19:24  [ main:30 ] - [ INFO ]  Successfully build tree in round : 9
+2022-12-29 18:19:24  [ main:32 ] - [ INFO ]  Successfully build tree in round : 10
+2022-12-29 18:19:24  [ main:35 ] - [ INFO ]  Successfully build tree in round : 11
+2022-12-29 18:19:24  [ main:36 ] - [ INFO ]  Successfully build tree in round : 12
+2022-12-29 18:19:24  [ main:38 ] - [ INFO ]  Successfully build tree in round : 13
+2022-12-29 18:19:24  [ main:39 ] - [ INFO ]  Successfully write trees to file : /mnt/code/VBFL_hw/test/bug1/0/tree #TotalRound : 13
+2022-12-29 18:19:24  [ main:42 ] - [ INFO ]  Failed write tree to file, too few instances : /mnt/code/VBFL_hw/test/bug1/1/tree

@@ -22,7 +22,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 /**
  * @description: std.log --> values.csv and attrMap --> tree
  * @time: 2021/8/4 11:46
@@ -43,9 +42,9 @@ public class IntraGenTree {
     private static String DEPENDENCY_FILE_PATH = null;
 
     public static void main(String[] args) {
-        String root_dir = "/Users/yumeng/JavaProjects/code/mysql_bugs/bug_14/";
-        String mid_path = "/Users/yumeng/JavaProjects/code/mysql_bugs/bug_14/instrumented_method_id.txt";
-        String dependency_root_path = "/Users/yumeng/JavaProjects/code/mysql_bugs/graphs/14/graph";
+        String root_dir = "/mnt/code/VBFL_hw/test/bug1/";
+        String mid_path = "/mnt/code/VBFL_hw/test/bug1/instrumented_method_id.txt";
+        String dependency_root_path = "/mnt/code/VBFL_hw/test/bug1/graph.txt";
         DEPENDENCY_FACTOR = Double.parseDouble("0.8");
         int methodCount = -1;
         File dependency_root = new File(dependency_root_path);
@@ -54,25 +53,30 @@ public class IntraGenTree {
             FileReader fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
             String line;
-            while((line = br.readLine()) != null){
+            while ((line = br.readLine()) != null) {
                 System.out.println(line);
                 if (!line.trim().equals("")) {
                     methodCount++;
-                    MID = line.split(":",2)[1];
+                    MID = line.split(":", 2)[1];
                     DEPENDENCY_FILE_PATH = "";
-                    for (File graphFile : dependency_root.listFiles()) {
-                        String gname = graphFile.getName();
-                        String mname = MID.split("#")[2];
-                        if (mname.contains("<")) {
-                            mname = mname.substring(0, mname.indexOf("<"));
+                    if (dependency_root.isDirectory()) {
+                        for (File graphFile : dependency_root.listFiles()) {
+                            String gname = graphFile.getName();
+                            String mname = MID.split("#")[2];
+                            if (mname.contains("<")) {
+                                mname = mname.substring(0, mname.indexOf("<"));
+                            }
+                            if (MID.split("#")[2].equals("generic_track_object<dd::Column>")
+                                    && gname.contains("Column")) {
+                                DEPENDENCY_FILE_PATH = dependency_root_path + "/" + gname;
+                                break;
+                            } else if (gname.contains(mname)) {
+                                DEPENDENCY_FILE_PATH = dependency_root_path + "/" + gname;
+                                break;
+                            }
                         }
-                        if (MID.split("#")[2].equals("generic_track_object<dd::Column>") && gname.contains("Column")) {
-                            DEPENDENCY_FILE_PATH = dependency_root_path + "/" + gname;
-                            break;
-                        } else if (gname.contains(mname)) {
-                            DEPENDENCY_FILE_PATH = dependency_root_path + "/" + gname;
-                            break;
-                        }
+                    } else {
+                        DEPENDENCY_FILE_PATH = dependency_root_path;
                     }
                     if (DEPENDENCY_FILE_PATH.equals("")) {
                         System.err.println("Couldn't find graph file for method : " + MID);
@@ -84,13 +88,13 @@ public class IntraGenTree {
                     String output_path = root_dir + methodCount;
 
                     File valuesFile = new File(valuesPath);
-                    if(!valuesFile.exists()){
+                    if (!valuesFile.exists()) {
                         System.out.println(String.format("[ERROR] values root dir not exist : %s", valuesPath));
                         return;
                     }
 
                     File treesDir = new File(output_path);
-                    if(!treesDir.exists()) {
+                    if (!treesDir.exists()) {
                         treesDir.mkdirs();
                     }
 
@@ -108,16 +112,16 @@ public class IntraGenTree {
 
     private static Map<String, String> loadMID(String format) {
         Map<String, String> result = new LinkedHashMap<>();
-        try{
+        try {
             File file = new File(format);
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String l;
-            while((l = reader.readLine()) != null) {
+            while ((l = reader.readLine()) != null) {
                 l = l.trim();
-                if(l.contains(":")) {
-                    String mid = l.substring(0,l.indexOf(":"));
-                    String m = l.substring(l.indexOf(":")+1);
-                    result.put(mid,m);
+                if (l.contains(":")) {
+                    String mid = l.substring(0, l.indexOf(":"));
+                    String m = l.substring(l.indexOf(":") + 1);
+                    result.put(mid, m);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -130,13 +134,13 @@ public class IntraGenTree {
 
     private static void parseClazzMethod(String mids_path) {
         File mids = new File(mids_path);
-        if(mids.exists()) {
+        if (mids.exists()) {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(mids));
                 String line = null;
                 while ((line = reader.readLine()) != null) {
-                    if(line.startsWith(MID+":")) {
-                        String tmp = line.substring(line.indexOf(":")+1).trim();
+                    if (line.startsWith(MID + ":")) {
+                        String tmp = line.substring(line.indexOf(":") + 1).trim();
                         String[] elements = tmp.split("#");
                         CLAZZ = elements[0];
                         METHOD = elements[2];
@@ -159,7 +163,7 @@ public class IntraGenTree {
 
         String csvPath = output_path + "/values.csv";
         File csvFile = new File(csvPath);
-        if((attrMapRes = JavaFile.log2csv(logFile, csvFile)) == null) {
+        if ((attrMapRes = JavaFile.log2csv(logFile, csvFile)) == null) {
             JavaLogger.error(_name + "#run Failing at log to csv transformation : " + logFile.getAbsolutePath());
             System.out.println("Log2Csv failed at " + logFile.getAbsolutePath());
             return;
@@ -169,36 +173,37 @@ public class IntraGenTree {
         // extract all vars, excluded field or array-element
         Set<String> vars = new LinkedHashSet<>();
         Set<String> locs = new LinkedHashSet<>();
-        for(String s : attrMapRes.values()) {
-            if(s.contains("-") && s.substring(s.lastIndexOf("-")+1).contains("/")) {
-            //if(s.contains("-") && StringUtils.isNumeric(s.substring(s.lastIndexOf("-")+1))) {
+        for (String s : attrMapRes.values()) {
+            if (s.contains("-") && s.substring(s.lastIndexOf("-") + 1).contains("/")) {
+                // if(s.contains("-") &&
+                // StringUtils.isNumeric(s.substring(s.lastIndexOf("-")+1))) {
                 String name = s.substring(0, s.lastIndexOf("-"));
-                String linecolsize = s.substring(s.lastIndexOf("-")+1);
+                String linecolsize = s.substring(s.lastIndexOf("-") + 1);
                 String line = linecolsize.split("/")[0];
                 String col = linecolsize.split("/")[1];
-                if(!StringUtils.isNumeric(line) || !StringUtils.isNumeric(col)) {
+                if (!StringUtils.isNumeric(line) || !StringUtils.isNumeric(col)) {
                     continue;
                 }
-                //locs.add(linecolsize);
+                // locs.add(linecolsize);
                 locs.add(line);
-                //if(name.startsWith("(") && name.endsWith(")")) {
-                //    continue;
-                //}
+                // if(name.startsWith("(") && name.endsWith(")")) {
+                // continue;
+                // }
 
                 // TODO: check correctness for special case like predicates by human added
                 // so need to recollected values
-                if(name.contains("{PRED}")) {
-                    name = name.substring(0,name.indexOf("{PRED}"));
-                    vars.add(name+"-"+linecolsize);
+                if (name.contains("{PRED}")) {
+                    name = name.substring(0, name.indexOf("{PRED}"));
+                    vars.add(name + "-" + linecolsize);
                     continue;
                 }
 
-                vars.add(name+"-"+linecolsize);
+                vars.add(name + "-" + linecolsize);
             }
         }
 
         // build dependency parser by DependencyParser2
-        if(dependencyParser==null){
+        if (dependencyParser == null) {
             dependencyParser = new DependencyParser2();
             dependencyParser.parse(DEPENDENCY_FILE_PATH);
         }
@@ -211,65 +216,71 @@ public class IntraGenTree {
         // get all vertexes in range
         Set<DependencyGraphVertex> vertexInRange = new LinkedHashSet<>();
         Map<DependencyGraphVertex, Set<DependencyGraphVertex>> equisByVertex = new IdentityHashMap<>();
-        for(Map.Entry entry : graph.getVertexes().entrySet()) {
+        for (Map.Entry entry : graph.getVertexes().entrySet()) {
             DependencyGraphVertex vertex = (DependencyGraphVertex) entry.getValue();
             String loc = "";
-            if(vertex instanceof VariableVertex) {
-                //loc = ((VariableVertex) vertex).getLineNo() + "/" + ((VariableVertex) vertex).getColNo();
+            if (vertex instanceof VariableVertex) {
+                // loc = ((VariableVertex) vertex).getLineNo() + "/" + ((VariableVertex)
+                // vertex).getColNo();
                 loc = "" + ((VariableVertex) vertex).getLineNo();
-            } else if(vertex instanceof TempVertex) {
-                //loc = ((TempVertex) vertex).getLineNo() + "/" + ((TempVertex) vertex).getColNo() + "/" + ((TempVertex) vertex).getSize();
+            } else if (vertex instanceof TempVertex) {
+                // loc = ((TempVertex) vertex).getLineNo() + "/" + ((TempVertex)
+                // vertex).getColNo() + "/" + ((TempVertex) vertex).getSize();
                 loc = "" + ((TempVertex) vertex).getLineNo();
-            } else if(vertex instanceof MethodInvocationVertex) {
+            } else if (vertex instanceof MethodInvocationVertex) {
                 loc = "" + ((MethodInvocationVertex) vertex).getLineNo();
             } else {
                 continue;
             }
             boolean inflag = false;
-            for(String loc0 : locs) {
-                if(loc0.equals(loc)) {
+            for (String loc0 : locs) {
+                if (loc0.equals(loc)) {
                     inflag = true;
                     break;
                 }
             }
-            if(inflag) {
+            if (inflag) {
                 vertexInRange.add(vertex);
             } else {
                 continue;
             }
-            
+
         }
 
         // get all equis
-        for(DependencyGraphVertex vertex : vertexInRange) {
+        for (DependencyGraphVertex vertex : vertexInRange) {
             // check equis by def-use
             Set<DependencyGraphVertex> equis = new LinkedHashSet<>();
-            for(DependencyGraphVertex v : vertexInRange) {
-                if(v==vertex) { continue; }
-                if(v.getVertexId().equals(vertex.getVertexId())) { continue; }
-                if(dependencyParser.isEquivalent(vertex, v)) {
+            for (DependencyGraphVertex v : vertexInRange) {
+                if (v == vertex) {
+                    continue;
+                }
+                if (v.getVertexId().equals(vertex.getVertexId())) {
+                    continue;
+                }
+                if (dependencyParser.isEquivalent(vertex, v)) {
                     equis.add(v);
                 }
             }
-            if(!equis.isEmpty()) {
+            if (!equis.isEmpty()) {
                 equisByVertex.put(vertex, equis);
             }
         }
 
         // compute score
         Set<DependencyGraphVertex> checked = new HashSet<>();
-        for(DependencyGraphVertex vertex : vertexInRange) {
+        for (DependencyGraphVertex vertex : vertexInRange) {
             double score = computeScoreByEdge(equisByVertex, vertex);
             scoreByVariable.put(vertex.getVertexId(), score);
         }
-        for(DependencyGraphVertex vertex : equisByVertex.keySet()) {
+        for (DependencyGraphVertex vertex : equisByVertex.keySet()) {
             double newScore = scoreByVariable.get(vertex.getVertexId());
-            for(DependencyGraphVertex equi : equisByVertex.get(vertex)) {
+            for (DependencyGraphVertex equi : equisByVertex.get(vertex)) {
                 double otherscore = scoreByVariable.get(equi.getVertexId());
                 if (otherscore < newScore) {
                     scoreByVariable.replace(vertex.getVertexId(), scoreByVariable.get(vertex.getVertexId()), newScore);
                 }
-	        }
+            }
         }
 
         // csv to tree
@@ -278,8 +289,8 @@ public class IntraGenTree {
             String outputPath = output_path + "/tree";
             DataSource src = new DataSource(srcPath);
             Instances data = src.getDataSet();
-            if(data.classIndex() == -1) {
-                data.setClassIndex(data.numAttributes()-1);
+            if (data.classIndex() == -1) {
+                data.setClassIndex(data.numAttributes() - 1);
             }
             // 1.delete attr-test_name
             Remove remove_testname = new Remove();
@@ -300,22 +311,23 @@ public class IntraGenTree {
             changeFormat_string.setInputFormat(data2);
             Instances data3 = Filter.useFilter(data2, changeFormat_string);
             // 4.delete instances with all NaN
-            for(int i=data3.numInstances()-1; i>=0; i--) {
+            for (int i = data3.numInstances() - 1; i >= 0; i--) {
                 Instance inst = data3.get(i);
                 boolean isAllNaN = true;
-                for(int j=0; j<data3.numAttributes()-1; j++) {
-                    if(!inst.toString(j).equals("?")) {
+                for (int j = 0; j < data3.numAttributes() - 1; j++) {
+                    if (!inst.toString(j).equals("?")) {
                         isAllNaN = false;
                         break;
                     }
                 }
-                if(isAllNaN) {
+                if (isAllNaN) {
                     data3.delete(i);
                 }
             }
-            // if less than 2 instances left after deleting all-NaN lines, skip building tree
+            // if less than 2 instances left after deleting all-NaN lines, skip building
+            // tree
             int instancesNum = data3.numInstances();
-            if(instancesNum <= 2) {
+            if (instancesNum <= 2) {
                 String content = "There are only " + instancesNum + " instances, too few to build tree";
                 JavaFile.writeTreeToFile(outputPath, content);
                 JavaLogger.info("Failed write tree to file, too few instances : " + outputPath);
@@ -325,22 +337,23 @@ public class IntraGenTree {
             Instances data4 = data3;
             ReplaceMissingWithUserConstant replaceMissing = new ReplaceMissingWithUserConstant();
             String range = "?";
-            for(int i=0; i<data3.numAttributes()-1; i++) {
+            for (int i = 0; i < data3.numAttributes() - 1; i++) {
                 Attribute a = data3.attribute(i);
-                if(a.isNominal()) {
-                    if(!attrMapRes.get(a.name()).contains("{PRED}")) {
-                        if(a.toString().endsWith("{true}") || a.toString().endsWith("{true,false}") || a.toString().endsWith("{false,true}")) {
-                            int ii = i+1;
+                if (a.isNominal()) {
+                    if (!attrMapRes.get(a.name()).contains("{PRED}")) {
+                        if (a.toString().endsWith("{true}") || a.toString().endsWith("{true,false}")
+                                || a.toString().endsWith("{false,true}")) {
+                            int ii = i + 1;
                             range += "," + ii;
                         }
                     }
-                } else if(a.isNumeric() && !attrMapRes.get(a.name()).contains("{PRED}")) {
-                    int ii = i+1;
+                } else if (a.isNumeric() && !attrMapRes.get(a.name()).contains("{PRED}")) {
+                    int ii = i + 1;
                     range += "," + ii;
                 }
             }
-            range = range.replaceAll("\\?,","");
-            if(!range.equals("?")) {
+            range = range.replaceAll("\\?,", "");
+            if (!range.equals("?")) {
                 replaceMissing.setAttributes(range);
                 replaceMissing.setInputFormat(data3);
                 replaceMissing.setNominalStringReplacementValue("false");
@@ -360,7 +373,8 @@ public class IntraGenTree {
         }
     }
 
-    private static double computeScoreByEdge(Map<DependencyGraphVertex, Set<DependencyGraphVertex>> equisByVertex, DependencyGraphVertex vertex) {
+    private static double computeScoreByEdge(Map<DependencyGraphVertex, Set<DependencyGraphVertex>> equisByVertex,
+            DependencyGraphVertex vertex) {
         double score = 1.0;
         for (DependencyGraphEdge outEdge : vertex.getStartEdges()) {
             // vertex --outEdge--> x
@@ -380,29 +394,31 @@ public class IntraGenTree {
             }
         }
         // also the equis
-        //if(equisByVertex.containsKey(vertex)) {
-        //    for (DependencyGraphVertex equi : equisByVertex.get(vertex)) {
-        //        for(DependencyGraphEdge outEdge : equi.getStartEdges()) {
-        //            if (outEdge.getEdgeType() == EdgeType.DATA_DEPENDENCY || outEdge.getEdgeType() == EdgeType.CONTROL_DEPENDENCY) {
-        //                score *= DEPENDENCY_FACTOR;
-        //            }
-        //        }
-        //    }
-        //}
+        // if(equisByVertex.containsKey(vertex)) {
+        // for (DependencyGraphVertex equi : equisByVertex.get(vertex)) {
+        // for(DependencyGraphEdge outEdge : equi.getStartEdges()) {
+        // if (outEdge.getEdgeType() == EdgeType.DATA_DEPENDENCY ||
+        // outEdge.getEdgeType() == EdgeType.CONTROL_DEPENDENCY) {
+        // score *= DEPENDENCY_FACTOR;
+        // }
+        // }
+        // }
+        // }
         return score;
     }
 
     /**
      * build tree with the given data, in a recursive style
+     * 
      * @param data4
      * @param outputPath
      */
     private static void buildTreeRecursive(Instances data4, String outputPath, LinkedHashMap<String, String> attrMapRes,
-                                           Map<DependencyGraphVertex, Set<DependencyGraphVertex>> equisByVertex,
-                                           Map<String, Double> scoreByPDG) {
+            Map<DependencyGraphVertex, Set<DependencyGraphVertex>> equisByVertex,
+            Map<String, Double> scoreByPDG) {
         Instances data = new Instances(data4);
         // check whether all fail/pass instances
-        if(data.numClasses()==1) {
+        if (data.numClasses() == 1) {
             JavaFile.writeTreeToFile(outputPath, "Data has unary class!");
             JavaLogger.info("Has unary class, failed write trees to file : " + outputPath);
             return;
@@ -414,7 +430,7 @@ public class IntraGenTree {
         Map<String, Double> reorderedAttrResult = new LinkedHashMap<>();
         // init isCorrelated-value map
         LinkedHashMap<String, Double> isCorrelatedMap = new LinkedHashMap<>();
-        for(String attr : attrMapRes.keySet()) {
+        for (String attr : attrMapRes.keySet()) {
             isCorrelatedMap.put(attr, Double.valueOf(1));
         }
         // attribute evaluating
@@ -423,7 +439,7 @@ public class IntraGenTree {
         try {
             eval_gain.buildEvaluator(data4);
             eval_correlation.buildEvaluator(data4);
-            for(int i=0; i<data.numAttributes()-1; i++) {
+            for (int i = 0; i < data.numAttributes() - 1; i++) {
                 String attr = data.attribute(i).name();
                 String attrContent = attrMapRes.get(attr);
                 double val_gain = eval_gain.evaluateAttribute(i);
@@ -436,33 +452,33 @@ public class IntraGenTree {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                for(int j=0; j<data.numAttributes()-1; j++) {
-                    if(isCorrelatedMap.get(data.attribute(j).name()) == 0) {
+                for (int j = 0; j < data.numAttributes() - 1; j++) {
+                    if (isCorrelatedMap.get(data.attribute(j).name()) == 0) {
                         continue;
                     }
                     Ranker ranker = new Ranker();
                     ranker.search(eval_correlation2, data4);
                     ranker.rankedAttributes();
                     double isCorrelated = eval_correlation2.evaluateAttribute(i);
-                    if(isCorrelated == 1) {
+                    if (isCorrelated == 1) {
                         isCorrelated = 0;
-                    }
-                    else if(isCorrelated == 0) {
+                    } else if (isCorrelated == 0) {
                         isCorrelated = 1;
                     }
-                    isCorrelatedMap.put(data.attribute(i).name(), Double.valueOf(isCorrelatedMap.get(data.attribute(j).name())*isCorrelated));
+                    isCorrelatedMap.put(data.attribute(i).name(),
+                            Double.valueOf(isCorrelatedMap.get(data.attribute(j).name()) * isCorrelated));
                 }
-                data4.setClassIndex(data4.numAttributes()-1);
+                data4.setClassIndex(data4.numAttributes() - 1);
                 double val_isCorrelated = isCorrelatedMap.get(attr);
                 attrResult.add(new AttributeStatistic(attr, attrContent, val_gain, val_correlation, val_isCorrelated));
-                //data.deleteAttributeAt(i);
+                // data.deleteAttributeAt(i);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         List<AttributeStatistic> tmp0 = new ArrayList<>(attrResult);
-        for(AttributeStatistic attr : tmp0) {
+        for (AttributeStatistic attr : tmp0) {
             attr.computeScore();
         }
         Collections.sort(tmp0, new AttrComparator());
@@ -470,55 +486,61 @@ public class IntraGenTree {
         // transform to name-score map
         Map<String, Double> scoreByName = new LinkedHashMap<>();
         // scoreByPDG --> scoreByName
-        for(AttributeStatistic a : tmp0) {
+        for (AttributeStatistic a : tmp0) {
             String aname = a._content;
             Double ascore = a._score;
 
             String iden = aname.substring(0, aname.lastIndexOf("-"));
-            if(aname.contains("{PRED}")) {
+            if (aname.contains("{PRED}")) {
                 iden = aname.substring(0, aname.indexOf("{PRED}"));
             }
-            String pos = aname.substring(aname.lastIndexOf('-')+1);
+            String pos = aname.substring(aname.lastIndexOf('-') + 1);
             String line = pos.split("/")[0];
             String col = pos.split("/")[1];
             String iden_pdg = "";
             if (pos.split("/").length == 2) {
-//                iden_pdg = "Variable#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "-" + iden;
+                // iden_pdg = "Variable#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "-"
+                // + iden;
                 for (String k : scoreByPDG.keySet()) {
-                    if (k.startsWith("Variable#"+CLAZZ) && k.contains(METHOD) && k.contains(line+"|"+col)) {
+                    if (k.startsWith("Variable#" + CLAZZ) && k.contains(METHOD) && k.contains(line + "|" + col)) {
                         iden_pdg = k;
                         break;
                     }
                 }
             } else if (pos.split("/").length == 3) {
                 String len = pos.split("/")[2];
-//                iden_pdg = "Temp#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "|" + len + "-TEMP135241";
+                // iden_pdg = "Temp#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "|" +
+                // len + "-TEMP135241";
                 for (String k : scoreByPDG.keySet()) {
-                    if (k.startsWith("Temp#"+CLAZZ) && k.contains(METHOD) && k.contains(line+"|"+col+"|"+len)) {
+                    if (k.startsWith("Temp#" + CLAZZ) && k.contains(METHOD)
+                            && k.contains(line + "|" + col + "|" + len)) {
                         iden_pdg = k;
                         break;
                     }
                 }
             }
-//            String iden_pdg2 = CLAZZ + "." + METHOD + ":" + line + "-" + iden;
+            // String iden_pdg2 = CLAZZ + "." + METHOD + ":" + line + "-" + iden;
             Double score_pdg = 1.0;
-            if(scoreByPDG.containsKey(iden_pdg)) {
+            if (scoreByPDG.containsKey(iden_pdg)) {
                 score_pdg = scoreByPDG.get(iden_pdg);
             }
             if (!iden_pdg.equals("")) {
-                String iden_pdg2 = iden_pdg.substring(iden_pdg.indexOf("#")+1, iden_pdg.indexOf(":")) + ":" + line + "-" + iden_pdg.substring(iden_pdg.lastIndexOf("-")+1);
-                for(String k : scoreByPDG.keySet()) {
-                    if(k.startsWith("MethodArgument") && k.endsWith(iden_pdg2)) {
+                String iden_pdg2 = iden_pdg.substring(iden_pdg.indexOf("#") + 1, iden_pdg.indexOf(":")) + ":" + line
+                        + "-" + iden_pdg.substring(iden_pdg.lastIndexOf("-") + 1);
+                for (String k : scoreByPDG.keySet()) {
+                    if (k.startsWith("MethodArgument") && k.endsWith(iden_pdg2)) {
                         score_pdg = scoreByPDG.get(k);
 
                         VariableVertex vv = null;
-                        for(DependencyGraphVertex v : equisByVertex.keySet()) {
-                            if(v.getVertexId().startsWith("MethodArgument") && v.getVertexId().endsWith(iden_pdg2)) {
-                                vv = new VariableVertex(((MethodInvocationVertex) v).getClazz(),((MethodInvocationVertex) v).getMethodName(), Integer.valueOf(line), ((MethodInvocationVertex) v).getSimpleName(), Integer.valueOf(col));
+                        for (DependencyGraphVertex v : equisByVertex.keySet()) {
+                            if (v.getVertexId().startsWith("MethodArgument") && v.getVertexId().endsWith(iden_pdg2)) {
+                                vv = new VariableVertex(((MethodInvocationVertex) v).getClazz(),
+                                        ((MethodInvocationVertex) v).getMethodName(), Integer.valueOf(line),
+                                        ((MethodInvocationVertex) v).getSimpleName(), Integer.valueOf(col));
                                 Set<DependencyGraphVertex> newequis2 = new LinkedHashSet<>();
                                 newequis2.addAll(equisByVertex.get(v));
                                 newequis2.add(v);
-                                for(DependencyGraphVertex v2 : equisByVertex.get(v)) {
+                                for (DependencyGraphVertex v2 : equisByVertex.get(v)) {
                                     Set<DependencyGraphVertex> newequis = new LinkedHashSet<>();
                                     newequis.addAll(equisByVertex.get(v2));
                                     newequis.add(vv);
@@ -544,7 +566,7 @@ public class IntraGenTree {
 
         // aggregate different lines to a single node
         Map<String, String> newAggreByName = new LinkedHashMap<>();
-        for(Map.Entry entry : equisByVertex.entrySet()) {
+        for (Map.Entry entry : equisByVertex.entrySet()) {
             List<String> equiUnit = new ArrayList<>();
             DependencyGraphVertex key = (DependencyGraphVertex) entry.getKey();
             Set<DependencyGraphVertex> value = (Set<DependencyGraphVertex>) entry.getValue();
@@ -552,11 +574,11 @@ public class IntraGenTree {
             equiUnit.addAll(resolveIDs(value));
             Collections.sort(equiUnit, new EquiComparator());
             String equiStr = "{";
-            for(String equi : equiUnit) {
-                if(equiStr.endsWith("{")) {
-                    equiStr += equi.substring(equi.lastIndexOf('-')+1);
+            for (String equi : equiUnit) {
+                if (equiStr.endsWith("{")) {
+                    equiStr += equi.substring(equi.lastIndexOf('-') + 1);
                 } else {
-                    equiStr += ";" + equi.substring(equi.lastIndexOf('-')+1);
+                    equiStr += ";" + equi.substring(equi.lastIndexOf('-') + 1);
                 }
             }
             equiStr += "}";
@@ -565,58 +587,58 @@ public class IntraGenTree {
         // need to change scoreByName, attrMapRes, data.attributeName
         Map<String, Double> scoreByName_afterAggre = new LinkedHashMap<>();
         Map<String, String> newNameByOld = new LinkedHashMap<>();
-        for(Map.Entry entry : scoreByName.entrySet()) {
+        for (Map.Entry entry : scoreByName.entrySet()) {
             String key = (String) entry.getKey();
-            String iden = key.substring(0,key.lastIndexOf("-"));
-            String pos = key.substring(key.lastIndexOf("-")+1);
+            String iden = key.substring(0, key.lastIndexOf("-"));
+            String pos = key.substring(key.lastIndexOf("-") + 1);
             String pred = "";
-            if(iden.contains("{PRED}")) {
+            if (iden.contains("{PRED}")) {
                 pred = iden.substring(iden.indexOf("{PRED}"));
                 iden = iden.substring(0, iden.indexOf("{PRED}"));
             }
-            if(newAggreByName.containsKey(iden+"-"+pos)) {
-                String keyStr = iden+pred+"-"+newAggreByName.get(iden+"-"+pos);
+            if (newAggreByName.containsKey(iden + "-" + pos)) {
+                String keyStr = iden + pred + "-" + newAggreByName.get(iden + "-" + pos);
                 Double newScore = (Double) entry.getValue();
-                if(!scoreByName_afterAggre.containsKey(keyStr)) {
+                if (!scoreByName_afterAggre.containsKey(keyStr)) {
                     scoreByName_afterAggre.put(keyStr, newScore);
                 } else {
-                    if(scoreByName_afterAggre.get(keyStr)>newScore) {
+                    if (scoreByName_afterAggre.get(keyStr) > newScore) {
                         scoreByName_afterAggre.put(keyStr, newScore);
                     }
                 }
-                newNameByOld.put((String) entry.getKey(), iden+pred+"-"+newAggreByName.get(iden+"-"+pos));
+                newNameByOld.put((String) entry.getKey(), iden + pred + "-" + newAggreByName.get(iden + "-" + pos));
             } else {
                 scoreByName_afterAggre.put((String) entry.getKey(), (Double) entry.getValue());
             }
         }
         Set<String> selected = new HashSet<>();
-        for(int i=data.numAttributes()-2; i>=0; i--) {
+        for (int i = data.numAttributes() - 2; i >= 0; i--) {
             Attribute attr = data.attribute(i);
             String aname = attrMapRes.get(attr.name());
-            if(newNameByOld.containsKey(aname)) {
+            if (newNameByOld.containsKey(aname)) {
                 String newname = newNameByOld.get(aname);
-                if(selected.contains(newname)) {
+                if (selected.contains(newname)) {
                     data.deleteAttributeAt(i);
                 } else {
                     selected.add(newname);
                 }
             }
         }
-        for(Map.Entry entry : attrMapRes.entrySet()) {
+        for (Map.Entry entry : attrMapRes.entrySet()) {
             String value = (String) entry.getValue();
-            if(newNameByOld.containsKey(value)) {
+            if (newNameByOld.containsKey(value)) {
                 attrMapRes.replace((String) entry.getKey(), value, newNameByOld.get(value));
             } else {
                 if (value.contains("-")) {
-                    String iden = value.substring(0,value.lastIndexOf("-"));
-                    String pos = value.substring(value.lastIndexOf("-")+1);
+                    String iden = value.substring(0, value.lastIndexOf("-"));
+                    String pos = value.substring(value.lastIndexOf("-") + 1);
                     String pred = "";
-                    if(iden.contains("{PRED}")) {
+                    if (iden.contains("{PRED}")) {
                         pred = iden.substring(iden.indexOf("{PRED}"));
                         iden = iden.substring(0, iden.indexOf("{PRED}"));
                     }
-                    if(newNameByOld.containsKey(iden+"-"+pos)) {
-                        String newiden = iden+pred+"-"+newNameByOld.get(iden+"-"+pos);
+                    if (newNameByOld.containsKey(iden + "-" + pos)) {
+                        String newiden = iden + pred + "-" + newNameByOld.get(iden + "-" + pos);
                         attrMapRes.replace((String) entry.getKey(), value, newiden);
                     }
                 }
@@ -624,40 +646,41 @@ public class IntraGenTree {
         }
 
         /*
-        // load linescore
-        Map<String, Map<String,Double>> scoreByLine = loadLineScore(LINESCORE_BASE);
-        for(Map.Entry entry : scoreByName_afterAggre.entrySet()) {
-            String v = (String) entry.getKey();
-            String vpos = v.substring(v.lastIndexOf("-")+1);
-            Double vscore = (Double) entry.getValue();
+         * // load linescore
+         * Map<String, Map<String,Double>> scoreByLine = loadLineScore(LINESCORE_BASE);
+         * for(Map.Entry entry : scoreByName_afterAggre.entrySet()) {
+         * String v = (String) entry.getKey();
+         * String vpos = v.substring(v.lastIndexOf("-")+1);
+         * Double vscore = (Double) entry.getValue();
+         * 
+         * Double linescore = 1.0;
+         * if(vpos.contains("{")&&vpos.contains("}")) {
+         * String[] vlines = vpos.substring(vpos.indexOf("{")+1,
+         * vpos.lastIndexOf("}")).split(";");
+         * for(String line : vlines) {
+         * line = line.split("/")[0];
+         * if(scoreByLine.get(methodByMID.get(MID)).containsKey(line)) {
+         * Double ls = scoreByLine.get(methodByMID.get(MID)).get(line);
+         * if(ls.doubleValue() == 1.0) {
+         * linescore += scoreByLine.get(methodByMID.get(MID)).get(line) / vlines.length;
+         * }
+         * }
+         * }
+         * } else {
+         * String line = vpos.split("/")[0];
+         * if(scoreByLine.get(methodByMID.get(MID)).containsKey(line)) {
+         * Double ls = scoreByLine.get(methodByMID.get(MID)).get(line);
+         * if(ls.doubleValue() == 1.0) {
+         * linescore += scoreByLine.get(methodByMID.get(MID)).get(line);
+         * }
+         * }
+         * }
+         * Double newscore = vscore * linescore;
+         * scoreByName_afterAggre.replace(v, vscore, newscore);
+         * }
+         */
 
-            Double linescore = 1.0;
-            if(vpos.contains("{")&&vpos.contains("}")) {
-                String[] vlines = vpos.substring(vpos.indexOf("{")+1, vpos.lastIndexOf("}")).split(";");
-                for(String line : vlines) {
-                    line = line.split("/")[0];
-                    if(scoreByLine.get(methodByMID.get(MID)).containsKey(line)) {
-                        Double ls = scoreByLine.get(methodByMID.get(MID)).get(line);
-                        if(ls.doubleValue() == 1.0) {
-                            linescore += scoreByLine.get(methodByMID.get(MID)).get(line) / vlines.length;
-                        }
-                    }
-                }
-            } else {
-                String line = vpos.split("/")[0];
-                if(scoreByLine.get(methodByMID.get(MID)).containsKey(line)) {
-                    Double ls = scoreByLine.get(methodByMID.get(MID)).get(line);
-                    if(ls.doubleValue() == 1.0) {
-                        linescore += scoreByLine.get(methodByMID.get(MID)).get(line);
-                    }
-                }
-            }
-            Double newscore = vscore * linescore;
-            scoreByName_afterAggre.replace(v, vscore, newscore);
-        }
-*/
-
-        while(data.numAttributes()-1 > 0) {
+        while (data.numAttributes() - 1 > 0) {
             RandomTree2 tree = new RandomTree2(scoreByName_afterAggre, attrMapRes);
             tree.setMaxDepth(TREE_MAX_DEPTH);
             try {
@@ -666,11 +689,11 @@ public class IntraGenTree {
                 // get attrs in this round
                 Set<String> attrs = getAllAttributes(tree);
                 // stop building when no attr is in the current tree
-                if(attrs.size() == 0) {
+                if (attrs.size() == 0) {
                     break;
                 }
                 // save the tree
-                //System.out.println(tree.toString());
+                // System.out.println(tree.toString());
                 String tmp = tree.toString().replace("\nRandomTree\n==========\n\n", "Round" + round + "\n");
                 tmp = tmp.replace(tmp.substring(tmp.indexOf("\nSize of the tree")), "\n");
                 treeBuf.append(tmp);
@@ -680,7 +703,7 @@ public class IntraGenTree {
                 reorderedAttrResult.putAll(tree.m_Tree.reorder());
 
                 // delete attrs in this round
-                for(String attr : attrs) {
+                for (String attr : attrs) {
                     int attrIndex = data.attribute(attr).index();
                     data.deleteAttributeAt(attrIndex);
                 }
@@ -694,19 +717,19 @@ public class IntraGenTree {
         treeBuf.append("All attributes get:\n");
         List<AttributeStatistic> nan = new ArrayList<>();
         List<AttributeStatistic> finalresult = new ArrayList<>();
-        for(AttributeStatistic attr : tmp0) {
-            if(Double.isNaN(attr._score)) {
+        for (AttributeStatistic attr : tmp0) {
+            if (Double.isNaN(attr._score)) {
                 nan.add(attr);
             } else {
                 finalresult.add(attr);
             }
         }
-        if(!nan.isEmpty()) {
+        if (!nan.isEmpty()) {
             finalresult.addAll(nan);
         }
         Collections.sort(finalresult, new AttrComparator());
-        for(AttributeStatistic attr : finalresult) {
-            //treeBuf.append(attr.attr2line());
+        for (AttributeStatistic attr : finalresult) {
+            // treeBuf.append(attr.attr2line());
         }
 
         // after reorder
@@ -719,9 +742,9 @@ public class IntraGenTree {
             }
         });
         Iterator it = reordered.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             Map.Entry entry = (Map.Entry) it.next();
-            
+
             String vname = attrMapRes.get(entry.getKey());
             Double pdgscore = 1.0;
             if (scoreByName_afterAggre.containsKey(vname)) {
@@ -731,17 +754,19 @@ public class IntraGenTree {
                 vname = vname.substring(1, vname.lastIndexOf(")"));
                 if (scoreByName_afterAggre.containsKey(vname)) {
                     Double ns = scoreByName_afterAggre.get(vname);
-                    if (ns<pdgscore) {
+                    if (ns < pdgscore) {
                         pdgscore = ns;
                     }
                 }
             }
-            
+
             treeBuf.append(entry.getKey() + " "
                     + vname + " "
                     + entry.getValue() + " "
                     + pdgscore + " "
-                    + ((Double)entry.getValue())*scoreByName_afterAggre.get(attrMapRes.get(entry.getKey())).doubleValue() + "\n");
+                    + ((Double) entry.getValue())
+                            * scoreByName_afterAggre.get(attrMapRes.get(entry.getKey())).doubleValue()
+                    + "\n");
         }
 
         JavaFile.writeTreeToFile(outputPath, treeBuf.toString());
@@ -753,29 +778,29 @@ public class IntraGenTree {
         Map<String, Map<String, Double>> scoreByLines = new LinkedHashMap<>();
         File file = new File(linescoreBase);
         int index = 3;
-        try{
+        try {
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String l;
-            while((l = reader.readLine()) != null) {
+            while ((l = reader.readLine()) != null) {
                 l = l.trim();
-                if(!l.contains("#")) {
+                if (!l.contains("#")) {
                     String[] tmp = l.split("\t");
-                    for(int i=0; i<tmp.length; i++) {
-                        if(tmp[i].equals("total")) {
+                    for (int i = 0; i < tmp.length; i++) {
+                        if (tmp[i].equals("total")) {
                             index = i;
                             break;
                         }
                     }
                 } else {
                     String name = l.split("\t")[0];
-                    String line = name.substring(name.lastIndexOf("#")+1);
-                    name = name.substring(0,name.lastIndexOf("#"));
+                    String line = name.substring(name.lastIndexOf("#") + 1);
+                    name = name.substring(0, name.lastIndexOf("#"));
                     String score = l.split("\t")[index];
-                    if(!scoreByLines.containsKey(name)) {
+                    if (!scoreByLines.containsKey(name)) {
                         Map<String, Double> inner = new LinkedHashMap<>();
                         scoreByLines.put(name, inner);
                     }
-                    scoreByLines.get(name).put(line,Double.valueOf(score));
+                    scoreByLines.get(name).put(line, Double.valueOf(score));
                 }
             }
         } catch (FileNotFoundException e) {
@@ -793,26 +818,26 @@ public class IntraGenTree {
 
             int nstart = -1;
             Matcher m = Constant.NODE_REGEX_3.matcher(idstr);
-            if(m.find()) {
+            if (m.find()) {
                 nstart = m.end();
             } else {
                 m = Constant.NODE_REGEX_2.matcher(idstr);
-            if(m.find()) {
-                nstart = m.end();
-            } else {
-                m = Constant.NODE_REGEX_1.matcher(idstr);
-                if(m.find()) {
+                if (m.find()) {
                     nstart = m.end();
+                } else {
+                    m = Constant.NODE_REGEX_1.matcher(idstr);
+                    if (m.find()) {
+                        nstart = m.end();
+                    }
                 }
             }
-            }
-            if(nstart!=-1){
+            if (nstart != -1) {
                 String name = idstr.substring(nstart);
-                String pos = m.group().substring(1,m.group().length()-1);
+                String pos = m.group().substring(1, m.group().length() - 1);
                 pos = pos.replaceAll("\\|", "/");
                 String var = name + "-" + pos;
                 result.add(var);
-            }           
+            }
         }
         return result;
     }
@@ -822,54 +847,55 @@ public class IntraGenTree {
 
         int nstart = -1;
         Matcher m = Constant.NODE_REGEX_3.matcher(idstr);
-        if(m.find()) {
+        if (m.find()) {
             nstart = m.end();
         } else {
             m = Constant.NODE_REGEX_2.matcher(idstr);
-            if(m.find()) {
+            if (m.find()) {
                 nstart = m.end();
             } else {
                 m = Constant.NODE_REGEX_1.matcher(idstr);
-                if(m.find()) {
+                if (m.find()) {
                     nstart = m.end();
                 }
             }
-        } 
+        }
 
         String name = idstr.substring(nstart);
-        String pos = m.group().substring(1,m.group().length()-1);
+        String pos = m.group().substring(1, m.group().length() - 1);
         pos = pos.replaceAll("\\|", "/");
         String var = name + "-" + pos;
         return var;
     }
 
     private static void computeTotalScore(List<AttributeStatistic> tmp) {
-        for(AttributeStatistic attr : tmp) {
-            attr._score = attr._importance*Math.pow(1-Math.pow(1/attr._importance,2),2) + Math.sqrt(attr._score);
+        for (AttributeStatistic attr : tmp) {
+            attr._score = attr._importance * Math.pow(1 - Math.pow(1 / attr._importance, 2), 2)
+                    + Math.sqrt(attr._score);
         }
     }
 
     private static Map<String, Set<String>> adjustDefUse(Map<String, Map<String, Set<String>>> defUseByLine) {
         Map<String, Set<String>> result = new HashMap<>();
-        if(defUseByLine == null) {
+        if (defUseByLine == null) {
             return result;
         }
         Iterator it = defUseByLine.entrySet().iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             Map.Entry entry = (Map.Entry) it.next();
             String lineNo = (String) entry.getKey();
             Map<String, Set<String>> defUseMap = (Map<String, Set<String>>) entry.getValue();
             Set<String> defs = defUseMap.get("def");
             Set<String> uses = defUseMap.get("use");
-            if(defs.isEmpty() || defs.size()>1) {
+            if (defs.isEmpty() || defs.size() > 1) {
                 continue;
             }
             String def_new = "";
-            for(String d : defs) {
+            for (String d : defs) {
                 def_new += d + "-" + lineNo;
             }
             Set<String> uses_new = new HashSet<>();
-            for(String u : uses) {
+            for (String u : uses) {
                 String use_new = u + "-" + lineNo;
                 uses_new.add(use_new);
             }
@@ -880,14 +906,14 @@ public class IntraGenTree {
 
     private static Map<String, Set<String>> adjustEquiLocals(Map<Set<String>, Set<String>> aggreEquiLocalsByRD) {
         Map<String, Set<String>> result = new HashMap<>();
-        if(aggreEquiLocalsByRD == null) {
+        if (aggreEquiLocalsByRD == null) {
             return result;
         }
         Iterator equiSetIt = aggreEquiLocalsByRD.entrySet().iterator();
-        while(equiSetIt.hasNext()) {
+        while (equiSetIt.hasNext()) {
             Map.Entry entry = (Map.Entry) equiSetIt.next();
             Set<String> equiSet = (Set<String>) entry.getValue();
-            for(String local : equiSet) {
+            for (String local : equiSet) {
                 Set<String> equis = new HashSet<>();
                 equis.addAll(equiSet);
                 equis.remove(local);
@@ -896,12 +922,12 @@ public class IntraGenTree {
             }
         }
         Iterator rdIt = aggreEquiLocalsByRD.keySet().iterator();
-        while(rdIt.hasNext()) {
+        while (rdIt.hasNext()) {
             Set<String> rds = (Set<String>) rdIt.next();
-            for(String local : rds) {
-                if(!result.containsKey(local)) {
+            for (String local : rds) {
+                if (!result.containsKey(local)) {
                     Set<String> equis = new HashSet<>();
-                    if(rds.size() == 1) {
+                    if (rds.size() == 1) {
                         equis.addAll(aggreEquiLocalsByRD.get(rds));
                     }
                     result.put(local, equis);
@@ -911,33 +937,34 @@ public class IntraGenTree {
         return result;
     }
 
-    private static void computeScoreConsiderComponents(List<AttributeStatistic> tmp, Map<String, Set<String>> defRelationByName, Map<String, Set<String>> aggreEquiLocalsByName) {
+    private static void computeScoreConsiderComponents(List<AttributeStatistic> tmp,
+            Map<String, Set<String>> defRelationByName, Map<String, Set<String>> aggreEquiLocalsByName) {
         _checkedComponents.clear();
-        if(defRelationByName.isEmpty()) {
+        if (defRelationByName.isEmpty()) {
             return;
         }
-        for(int i=0; i<tmp.size(); i++) {
+        for (int i = 0; i < tmp.size(); i++) {
             AttributeStatistic as = tmp.get(i);
-            if(!as.IS_FIRST_IN_EQUIVALENCE) {
+            if (!as.IS_FIRST_IN_EQUIVALENCE) {
                 continue;
             }
             String format_name = getFormatName(as._content);
             Set<String> components = new HashSet<>();
             Set<String> tmp_cp = checkComponents(format_name, defRelationByName, aggreEquiLocalsByName);
-            if(tmp_cp.size() == 0 && _checkedComponentsMap.containsKey(format_name)) {
+            if (tmp_cp.size() == 0 && _checkedComponentsMap.containsKey(format_name)) {
                 tmp_cp = _checkedComponentsMap.get(format_name);
             }
             components.addAll(tmp_cp);
             // check all candidates in tmp
-            if(!components.isEmpty()) {
+            if (!components.isEmpty()) {
                 // as long as current candidate is a component of a local, change its score
-                for(int j=0; j<tmp.size(); j++) {
+                for (int j = 0; j < tmp.size(); j++) {
                     AttributeStatistic as2 = tmp.get(j);
                     String format_name2 = getFormatName(as2._content);
                     // also need to check components' predicates
-                    if(isComponent(components, format_name2)) {
+                    if (isComponent(components, format_name2)) {
                         as2._score *= 0.4; // focus on result of an error revealed by a var
-                        //as2._importance *= 1.01; // focus on influence of an error caused by a var
+                        // as2._importance *= 1.01; // focus on influence of an error caused by a var
                     }
                 }
             }
@@ -945,24 +972,28 @@ public class IntraGenTree {
     }
 
     private static boolean isComponent(Set<String> components, String format_name) {
-        if(components == null) { return false; }
+        if (components == null) {
+            return false;
+        }
         // directly check name
-        if(components.contains(format_name)) { return true; }
+        if (components.contains(format_name)) {
+            return true;
+        }
         // also check predicates, by traversing and extracting
         // para name and line
         String p_name = format_name.substring(0, format_name.indexOf("-"));
-        String p_line = format_name.substring(format_name.indexOf("-")+1);
-        for(String c : components) {
+        String p_line = format_name.substring(format_name.indexOf("-") + 1);
+        for (String c : components) {
             // c-name
             String c_name = c.substring(0, c.indexOf("-"));
             // c-line
-            String c_line = c.substring(c.indexOf("-")+1);
-            if(p_line.equals(c_line)) {
-                if(p_name.contains(".") && p_name.substring(0, p_name.indexOf(".")).equals(c_name)) {
+            String c_line = c.substring(c.indexOf("-") + 1);
+            if (p_line.equals(c_line)) {
+                if (p_name.contains(".") && p_name.substring(0, p_name.indexOf(".")).equals(c_name)) {
                     // field
                     return true;
-                }
-                else if(p_name.contains("[") && p_name.contains("]") && p_name.substring(0, p_name.indexOf("[")).equals(c_name)) {
+                } else if (p_name.contains("[") && p_name.contains("]")
+                        && p_name.substring(0, p_name.indexOf("[")).equals(c_name)) {
                     // array component
                     return true;
                 }
@@ -971,40 +1002,41 @@ public class IntraGenTree {
         return false;
     }
 
-    private static Set<String> checkComponents(String equi, Map<String, Set<String>> defRelationByName, Map<String, Set<String>> aggreEquiLocalsByName) {
+    private static Set<String> checkComponents(String equi, Map<String, Set<String>> defRelationByName,
+            Map<String, Set<String>> aggreEquiLocalsByName) {
         Set<String> result = new HashSet<>();
-        if(_checkedComponents.contains(equi)) {
+        if (_checkedComponents.contains(equi)) {
             return result;
         }
         // both target and its equis need to be checked
         Set<String> checkList = new HashSet<>();
         checkList.add(equi);
-        if(aggreEquiLocalsByName.containsKey(equi)) {
+        if (aggreEquiLocalsByName.containsKey(equi)) {
             checkList.addAll(aggreEquiLocalsByName.get(equi));
         }
         _checkedComponents.addAll(checkList);
-        for(String e : checkList) {
-            //_checkedComponents.add(e);
-            if(defRelationByName.containsKey(e)) {
+        for (String e : checkList) {
+            // _checkedComponents.add(e);
+            if (defRelationByName.containsKey(e)) {
                 Set<String> cAll = defRelationByName.get(e);
                 result.addAll(cAll);
                 // equivalents of component
-                for(String c : cAll) {
+                for (String c : cAll) {
                     Set<String> equi_of_c = aggreEquiLocalsByName.get(c);
-                    if(equi_of_c != null && !equi_of_c.isEmpty()) {
+                    if (equi_of_c != null && !equi_of_c.isEmpty()) {
                         result.addAll(equi_of_c);
                     }
                 }
                 // components of component
-                for(String c : cAll) {
+                for (String c : cAll) {
                     Set<String> c_of_c = checkComponents(c, defRelationByName, aggreEquiLocalsByName);
-                    if(!c_of_c.isEmpty()) {
+                    if (!c_of_c.isEmpty()) {
                         result.addAll(c_of_c);
                     }
                 }
             }
         }
-        for(String e : checkList) {
+        for (String e : checkList) {
             _checkedComponentsMap.put(e, result);
         }
         return result;
@@ -1017,38 +1049,40 @@ public class IntraGenTree {
         for (DependencyGraphEdge outEdge : start.getStartEdges()) {
             if (outEdge.getEdgeType() == EdgeType.CONTROL_DEPENDENCY) {
                 num++;
-            } else if (outEdge.getEdgeType() == EdgeType.DATA_DEPENDENCY && outEdge.getEndVertex() instanceof TempVertex && outEdge.getEndVertex().getToVertexes().size() != 0) {
+            } else if (outEdge.getEdgeType() == EdgeType.DATA_DEPENDENCY && outEdge.getEndVertex() instanceof TempVertex
+                    && outEdge.getEndVertex().getToVertexes().size() != 0) {
                 num += getImplicitDependenceNum(outEdge.getEndVertex());
             }
         }
         return num == 1 ? 0 : num;
     }
 
-    private static void computeScoreConsiderEquivalence(List<AttributeStatistic> tmp, Map<String, Set<String>> aggreEquiLocalsByName) {
-        if(aggreEquiLocalsByName.isEmpty()) {
+    private static void computeScoreConsiderEquivalence(List<AttributeStatistic> tmp,
+            Map<String, Set<String>> aggreEquiLocalsByName) {
+        if (aggreEquiLocalsByName.isEmpty()) {
             return;
         }
-        for(int i=0; i<tmp.size(); i++) {
+        for (int i = 0; i < tmp.size(); i++) {
             AttributeStatistic as = tmp.get(i);
-            if(as.CONSIDER_EQUIVALENCE) {
+            if (as.CONSIDER_EQUIVALENCE) {
                 // already consider its equivalents
                 continue;
             }
             as.IS_FIRST_IN_EQUIVALENCE = true;
             String format_name = getFormatName(as._content);
             // get all equivalences
-            if(!aggreEquiLocalsByName.containsKey(format_name)) {
+            if (!aggreEquiLocalsByName.containsKey(format_name)) {
                 continue;
             }
             Set<String> equis = aggreEquiLocalsByName.get(format_name);
-            if(equis.size() == 0) {
+            if (equis.size() == 0) {
                 continue;
             }
             // check candidates after current as
-            for(int j=i+1; j<tmp.size(); j++) {
+            for (int j = i + 1; j < tmp.size(); j++) {
                 AttributeStatistic as2 = tmp.get(j);
                 String format_namt2 = getFormatName(as2._content);
-                if(equis.contains(format_namt2)) {
+                if (equis.contains(format_namt2)) {
                     as2._score *= 0.1;
                     as2.CONSIDER_EQUIVALENCE = true;
                 }
@@ -1059,15 +1093,16 @@ public class IntraGenTree {
     private static String getFormatName(String fullName) {
         // x.x-line --> x-line
         String name = fullName.substring(0, fullName.indexOf("-"));
-        if(fullName.contains(".")) {
+        if (fullName.contains(".")) {
             name = fullName.substring(0, fullName.indexOf("."));
         }
-        String lineNo = fullName.substring(fullName.indexOf("-")+1);
+        String lineNo = fullName.substring(fullName.indexOf("-") + 1);
         return name + "-" + lineNo;
     }
 
     /**
      * get all attributes appeared in this tree
+     * 
      * @param tree
      * @return
      */
@@ -1079,14 +1114,14 @@ public class IntraGenTree {
             String labelPattern = "\\[(.*?)]";
             Pattern p = Pattern.compile(labelPattern);
             Matcher m = p.matcher(treeStr);
-            while(m.find()){
+            while (m.find()) {
                 String param = m.group(0);
-                param = param.substring(1,param.length()-1);
+                param = param.substring(1, param.length() - 1);
                 // match like A6
                 String attrPattern = "[0-9]+: A[0-9]+";
                 Pattern p2 = Pattern.compile(attrPattern);
                 Matcher m2 = p2.matcher(param);
-                while(m2.find()) {
+                while (m2.find()) {
                     String a = m2.group(0).trim();
                     a = a.substring(a.indexOf("A"));
                     result.add(a);
@@ -1102,10 +1137,9 @@ public class IntraGenTree {
         @Override
         public int compare(AttributeStatistic o1, AttributeStatistic o2) {
             double diff = o2._gainRatio - o1._gainRatio;
-            if(diff >= 0 ) {
+            if (diff >= 0) {
                 return 1;
-            }
-            else {
+            } else {
                 return -1;
             }
         }
