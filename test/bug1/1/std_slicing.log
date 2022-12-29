@@ -1,0 +1,8 @@
+SqlTableTest.PromoteFirstTimestampColumn1
+PASS
+SqlTableTest.PromoteFirstTimestampColumn2
+FAIL
+SqlTableTest.PromoteFirstTimestampColumn3
+PASS
+SqlTableTest.FileNameToTableName
+PASS

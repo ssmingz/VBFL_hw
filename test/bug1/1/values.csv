@@ -1,0 +1,5 @@
+A1,A2
+SqlTableTest.PromoteFirstTimestampColumn1@0,"PASS"
+SqlTableTest.PromoteFirstTimestampColumn2@1,"FAIL"
+SqlTableTest.PromoteFirstTimestampColumn3@2,"PASS"
+SqlTableTest.FileNameToTableName@3,"PASS"
