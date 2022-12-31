@@ -3,6 +3,8 @@ package fl.weka;
 import fl.utils.Constant;
 import fl.utils.JavaFile;
 import fl.utils.JavaLogger;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import pda.core.dependency.DependencyParser2;
 import pda.core.dependency.dependencyGraph.*;
@@ -41,73 +43,94 @@ public class IntraGenTree {
     private static int TREE_MAX_DEPTH = 5;
     private static String DEPENDENCY_FILE_PATH = null;
 
+    // 21-43:21，27，30，32，33，34，43
     public static void main(String[] args) {
-        String root_dir = "/mnt/code/VBFL_hw/test/bug1/";
-        String mid_path = "/mnt/code/VBFL_hw/test/bug1/instrumented_method_id.txt";
-        String dependency_root_path = "/mnt/code/VBFL_hw/test/bug1/graph.txt";
-        DEPENDENCY_FACTOR = Double.parseDouble("0.8");
-        int methodCount = -1;
-        File dependency_root = new File(dependency_root_path);
-        File file = new File(mid_path);
+        checkLog("/mnt/code/VBFL_hw/logs");
+        int[] bids = { 21, 27, 30, 32, 33, 34, 43 };
+        for (int i = 1; i <= 43; i++) {
+            if (!ArrayUtils.contains(bids, i)) {
+                String root_dir = "/mnt/values/trees/bug_" + i + "/";
+                String mid_path = "/mnt/values/trees/bug_" + i + "/instrumented_method_id.txt";
+                String graph_map_path = "/mnt/values/" + i + "/graph_map.txt";
+                DEPENDENCY_FACTOR = Double.parseDouble("0.8");
+                int methodCount = -1;
+                File file = new File(mid_path);
+                try {
+                    FileReader fr = new FileReader(file);
+                    BufferedReader br = new BufferedReader(fr);
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        if (!line.trim().equals("")) {
+                            methodCount++;
+                            MID = line.split(":", 2)[1];
+                            CLAZZ = MID.split("#")[0];
+                            METHOD = MID.split("#")[2];
+                            String valuesPath = root_dir + methodCount + "/std_slicing.log";
+                            String output_path = root_dir + methodCount;
+
+                            File valuesFile = new File(valuesPath);
+                            if (!valuesFile.exists()) {
+                                JavaLogger.debug(String.format("[ERROR] values root dir not exist : %s", valuesPath));
+                                continue;
+                            }
+
+                            DEPENDENCY_FILE_PATH = parse_graph_path(graph_map_path);
+                            if (DEPENDENCY_FILE_PATH == null) {
+                                JavaLogger.debug("[WARNING] Couldn't find graph file for method : " + line);
+                                // continue;
+                            }
+
+                            File treesDir = new File(output_path);
+                            if (!treesDir.exists()) {
+                                treesDir.mkdirs();
+                            }
+
+                            parseClazzMethod(mid_path);
+
+                            log2tree(valuesPath, output_path);
+                            System.err.println("[OK] Generate trees successfully for method : " + line);
+                        }
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static void checkLog(String path) {
+        File dir = new File(path);
+        if (dir.isDirectory() == false) {
+            return;
+        }
+        File[] listFiles = dir.listFiles();
+        for (File file : listFiles) {
+            file.delete();
+        }
+        dir.delete();
+    }
+
+    private static String parse_graph_path(String graph_map_path) {
+        File file = new File(graph_map_path);
         try {
             FileReader fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
             String line;
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
-                if (!line.trim().equals("")) {
-                    methodCount++;
-                    MID = line.split(":", 2)[1];
-                    DEPENDENCY_FILE_PATH = "";
-                    if (dependency_root.isDirectory()) {
-                        for (File graphFile : dependency_root.listFiles()) {
-                            String gname = graphFile.getName();
-                            String mname = MID.split("#")[2];
-                            if (mname.contains("<")) {
-                                mname = mname.substring(0, mname.indexOf("<"));
-                            }
-                            if (MID.split("#")[2].equals("generic_track_object<dd::Column>")
-                                    && gname.contains("Column")) {
-                                DEPENDENCY_FILE_PATH = dependency_root_path + "/" + gname;
-                                break;
-                            } else if (gname.contains(mname)) {
-                                DEPENDENCY_FILE_PATH = dependency_root_path + "/" + gname;
-                                break;
-                            }
-                        }
-                    } else {
-                        DEPENDENCY_FILE_PATH = dependency_root_path;
-                    }
-                    if (DEPENDENCY_FILE_PATH.equals("")) {
-                        System.err.println("Couldn't find graph file for method : " + MID);
-                        continue;
-                    }
-                    CLAZZ = MID.split("#")[0];
-                    METHOD = MID.split("#")[2];
-                    String valuesPath = root_dir + methodCount + "/std_slicing.log";
-                    String output_path = root_dir + methodCount;
-
-                    File valuesFile = new File(valuesPath);
-                    if (!valuesFile.exists()) {
-                        System.out.println(String.format("[ERROR] values root dir not exist : %s", valuesPath));
-                        return;
-                    }
-
-                    File treesDir = new File(output_path);
-                    if (!treesDir.exists()) {
-                        treesDir.mkdirs();
-                    }
-
-                    parseClazzMethod(mid_path);
-
-                    log2tree(valuesPath, output_path);
-                }
+                String src_file = line.split(",")[0];
+                String method = line.split(",")[1];
+                String graph_file = line.split(",")[4].trim();
+                if (src_file.equals(CLAZZ) && method.equals(METHOD))
+                    return graph_file;
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     private static Map<String, String> loadMID(String format) {
@@ -165,10 +188,10 @@ public class IntraGenTree {
         File csvFile = new File(csvPath);
         if ((attrMapRes = JavaFile.log2csv(logFile, csvFile)) == null) {
             JavaLogger.error(_name + "#run Failing at log to csv transformation : " + logFile.getAbsolutePath());
-            System.out.println("Log2Csv failed at " + logFile.getAbsolutePath());
+            JavaLogger.debug("[ERROR] Log2Csv failed at " + logFile.getAbsolutePath());
             return;
         }
-        System.out.println("Log2Csv successful at " + logFile.getAbsolutePath());
+        // System.out.println("Log2Csv successful at " + logFile.getAbsolutePath());
 
         // extract all vars, excluded field or array-element
         Set<String> vars = new LinkedHashSet<>();
@@ -203,46 +226,48 @@ public class IntraGenTree {
         }
 
         // build dependency parser by DependencyParser2
-        if (dependencyParser == null) {
+        if (dependencyParser == null && DEPENDENCY_FILE_PATH != null) {
             dependencyParser = new DependencyParser2();
             dependencyParser.parse(DEPENDENCY_FILE_PATH);
         }
 
         Map<String, Double> scoreByVariable = new HashMap<>();
-
-        // load or build graph
-        DependencyGraph graph = dependencyParser.getDependencyGraph();
-
         // get all vertexes in range
         Set<DependencyGraphVertex> vertexInRange = new LinkedHashSet<>();
         Map<DependencyGraphVertex, Set<DependencyGraphVertex>> equisByVertex = new IdentityHashMap<>();
-        for (Map.Entry entry : graph.getVertexes().entrySet()) {
-            DependencyGraphVertex vertex = (DependencyGraphVertex) entry.getValue();
-            String loc = "";
-            if (vertex instanceof VariableVertex) {
-                // loc = ((VariableVertex) vertex).getLineNo() + "/" + ((VariableVertex)
-                // vertex).getColNo();
-                loc = "" + ((VariableVertex) vertex).getLineNo();
-            } else if (vertex instanceof TempVertex) {
-                // loc = ((TempVertex) vertex).getLineNo() + "/" + ((TempVertex)
-                // vertex).getColNo() + "/" + ((TempVertex) vertex).getSize();
-                loc = "" + ((TempVertex) vertex).getLineNo();
-            } else if (vertex instanceof MethodInvocationVertex) {
-                loc = "" + ((MethodInvocationVertex) vertex).getLineNo();
-            } else {
-                continue;
-            }
-            boolean inflag = false;
-            for (String loc0 : locs) {
-                if (loc0.equals(loc)) {
-                    inflag = true;
-                    break;
+
+        // load or build graph
+        if (DEPENDENCY_FILE_PATH != null) {
+            DependencyGraph graph = dependencyParser.getDependencyGraph();
+            for (Map.Entry entry : graph.getVertexes().entrySet()) {
+                DependencyGraphVertex vertex = (DependencyGraphVertex) entry.getValue();
+                String loc = "";
+                if (vertex instanceof VariableVertex) {
+                    // loc = ((VariableVertex) vertex).getLineNo() + "/" + ((VariableVertex)
+                    // vertex).getColNo();
+                    loc = "" + ((VariableVertex) vertex).getLineNo();
+                } else if (vertex instanceof TempVertex) {
+                    // loc = ((TempVertex) vertex).getLineNo() + "/" + ((TempVertex)
+                    // vertex).getColNo() + "/" + ((TempVertex) vertex).getSize();
+                    loc = "" + ((TempVertex) vertex).getLineNo();
+                } else if (vertex instanceof MethodInvocationVertex) {
+                    loc = "" + ((MethodInvocationVertex) vertex).getLineNo();
+                } else {
+                    continue;
                 }
-            }
-            if (inflag) {
-                vertexInRange.add(vertex);
-            } else {
-                continue;
+                boolean inflag = false;
+                for (String loc0 : locs) {
+                    if (loc0.equals(loc)) {
+                        inflag = true;
+                        break;
+                    }
+                }
+                if (inflag) {
+                    vertexInRange.add(vertex);
+                } else {
+                    continue;
+                }
+
             }
 
         }
@@ -330,7 +355,8 @@ public class IntraGenTree {
             if (instancesNum <= 2) {
                 String content = "There are only " + instancesNum + " instances, too few to build tree";
                 JavaFile.writeTreeToFile(outputPath, content);
-                JavaLogger.info("Failed write tree to file, too few instances : " + outputPath);
+                // JavaLogger.info("Failed write tree to file, too few instances : " +
+                // outputPath);
                 return;
             }
             // replace missing
@@ -420,7 +446,8 @@ public class IntraGenTree {
         // check whether all fail/pass instances
         if (data.numClasses() == 1) {
             JavaFile.writeTreeToFile(outputPath, "Data has unary class!");
-            JavaLogger.info("Has unary class, failed write trees to file : " + outputPath);
+            // JavaLogger.info("Has unary class, failed write trees to file : " +
+            // outputPath);
             return;
         }
 
@@ -707,7 +734,7 @@ public class IntraGenTree {
                     int attrIndex = data.attribute(attr).index();
                     data.deleteAttributeAt(attrIndex);
                 }
-                JavaLogger.info("Successfully build tree in round : " + round++);
+                // JavaLogger.info("Successfully build tree in round : " + round++);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -771,7 +798,8 @@ public class IntraGenTree {
 
         JavaFile.writeTreeToFile(outputPath, treeBuf.toString());
 
-        JavaLogger.info("Successfully write trees to file : " + outputPath + " #TotalRound : " + --round);
+        // JavaLogger.info("Successfully write trees to file : " + outputPath + "
+        // #TotalRound : " + --round);
     }
 
     private static Map<String, Map<String, Double>> loadLineScore(String linescoreBase) {

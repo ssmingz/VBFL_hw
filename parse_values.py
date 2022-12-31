@@ -204,13 +204,16 @@ def main():
 if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
-    bugid = 14
-    root_dir = f'/Users/yumeng/JavaProjects/code/mysql_bugs/values/{bugid}/'
-    output_dir = f'/Users/yumeng/JavaProjects/code/mysql_bugs/bug_{bugid}/'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    output_path = output_dir + "original.txt"
-    instr_output_path = output_dir + "instrumented_method_id.txt"
-    values_path = root_dir + "values.txt"
-    main()
+    for bugid in range(1,21):
+        root_dir = f'/mnt/values/{bugid}/'
+        values_path = root_dir + "values.txt"
+        if not os.path.exists(root_dir) or not os.path.exists(values_path):
+            continue
+        output_dir = f'/mnt/values/trees/bug_{bugid}/'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        output_path = output_dir + "original.txt"
+        instr_output_path = output_dir + "instrumented_method_id.txt"
+        main()
+        method_map.clear()
     print("Finish")

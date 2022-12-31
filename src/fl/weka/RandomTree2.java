@@ -31,8 +31,8 @@ import weka.gui.ProgrammaticProperty;
 
 import fl.weka.gentree.*;
 
-
-public class RandomTree2 extends AbstractClassifier implements OptionHandler, WeightedInstancesHandler, Randomizable, Drawable, PartitionGenerator {
+public class RandomTree2 extends AbstractClassifier
+        implements OptionHandler, WeightedInstancesHandler, Randomizable, Drawable, PartitionGenerator {
     private static final long serialVersionUID = -9051119597407396024L;
     protected RandomTree2.Tree m_Tree = null;
     protected Instances m_Info = null;
@@ -182,12 +182,19 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
     public Enumeration<Option> listOptions() {
         Vector<Option> newVector = new Vector();
-        newVector.addElement(new Option("\tNumber of attributes to randomly investigate.\t(default 0)\n\t(<1 = int(log_2(#predictors)+1)).", "K", 1, "-K <number of attributes>"));
-        newVector.addElement(new Option("\tSet minimum number of instances per leaf.\n\t(default 1)", "M", 1, "-M <minimum number of instances>"));
-        newVector.addElement(new Option("\tSet minimum numeric class variance proportion\n\tof train variance for split (default 1e-3).", "V", 1, "-V <minimum variance for split>"));
+        newVector.addElement(new Option(
+                "\tNumber of attributes to randomly investigate.\t(default 0)\n\t(<1 = int(log_2(#predictors)+1)).",
+                "K", 1, "-K <number of attributes>"));
+        newVector.addElement(new Option("\tSet minimum number of instances per leaf.\n\t(default 1)", "M", 1,
+                "-M <minimum number of instances>"));
+        newVector.addElement(new Option(
+                "\tSet minimum numeric class variance proportion\n\tof train variance for split (default 1e-3).", "V",
+                1, "-V <minimum variance for split>"));
         newVector.addElement(new Option("\tSeed for random number generator.\n\t(default 1)", "S", 1, "-S <num>"));
-        newVector.addElement(new Option("\tThe maximum depth of the tree, 0 for unlimited.\n\t(default 0)", "depth", 1, "-depth <num>"));
-        newVector.addElement(new Option("\tNumber of folds for backfitting (default 0, no backfitting).", "N", 1, "-N <num>"));
+        newVector.addElement(new Option("\tThe maximum depth of the tree, 0 for unlimited.\n\t(default 0)", "depth", 1,
+                "-depth <num>"));
+        newVector.addElement(
+                new Option("\tNumber of folds for backfitting (default 0, no backfitting).", "N", 1, "-N <num>"));
         newVector.addElement(new Option("\tAllow unclassified instances.", "U", 0, "-U"));
         newVector.addElement(new Option("\t" + this.breakTiesRandomlyTipText(), "B", 0, "-B"));
         newVector.addAll(Collections.list(super.listOptions()));
@@ -223,7 +230,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
         }
 
         Collections.addAll(result, super.getOptions());
-        return (String[])result.toArray(new String[result.size()]);
+        return (String[]) result.toArray(new String[result.size()]);
     }
 
     public void setOptions(String[] options) throws Exception {
@@ -297,26 +304,27 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
         // KValue: the number of randomly chosen attributes
         this.m_KValue = data.numAttributes() - 1;
-        //if (this.m_KValue > data.numAttributes() - 1) {
-        //    this.m_KValue = data.numAttributes() - 1;
-        //}
+        // if (this.m_KValue > data.numAttributes() - 1) {
+        // this.m_KValue = data.numAttributes() - 1;
+        // }
 
-        //if (this.m_KValue < 1) {
-        //    this.m_KValue = (int)Utils.log2((double)(data.numAttributes() - 1)) + 1;
-        //}
+        // if (this.m_KValue < 1) {
+        // this.m_KValue = (int)Utils.log2((double)(data.numAttributes() - 1)) + 1;
+        // }
 
         this.getCapabilities().testWithFail(data);
         data = new Instances(data);
         data.deleteWithMissingClass();
         if (data.numAttributes() == 1) {
-            System.err.println("Cannot build model (only class attribute present in data!), using ZeroR model instead!");
+            System.err
+                    .println("Cannot build model (only class attribute present in data!), using ZeroR model instead!");
             this.m_zeroR = new ZeroR();
             this.m_zeroR.buildClassifier(data);
         } else {
             this.m_zeroR = null;
             Instances train = null;
             Instances backfit = null;
-            Random rand = data.getRandomNumberGenerator((long)this.m_randomSeed);
+            Random rand = data.getRandomNumberGenerator((long) this.m_randomSeed);
             if (this.m_NumFolds <= 0) {
                 train = data;
             } else {
@@ -329,7 +337,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             int[] attIndicesWindow = new int[data.numAttributes() - 1];
             int j = 0;
 
-            for(int i = 0; i < attIndicesWindow.length; ++i) {
+            for (int i = 0; i < attIndicesWindow.length; ++i) {
                 if (j == data.classIndex()) {
                     ++j;
                 }
@@ -341,10 +349,10 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             double totalSumSquared = 0.0D;
             double[] classProbs = new double[train.numClasses()];
 
-            for(int i = 0; i < train.numInstances(); ++i) {
+            for (int i = 0; i < train.numInstances(); ++i) {
                 Instance inst = train.instance(i);
                 if (data.classAttribute().isNominal()) {
-                    int var10001 = (int)inst.classValue();
+                    int var10001 = (int) inst.classValue();
                     classProbs[var10001] += inst.weight();
                     totalWeight += inst.weight();
                 } else {
@@ -362,7 +370,8 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
             this.m_Tree = new RandomTree2.Tree();
             this.m_Info = new Instances(data, 0);
-            this.m_Tree.buildTree(train, classProbs, attIndicesWindow, totalWeight, rand, 0, this.m_MinVarianceProp * trainVariance, 0, new HashSet<>());
+            this.m_Tree.buildTree(train, classProbs, attIndicesWindow, totalWeight, rand, 0,
+                    this.m_MinVarianceProp * trainVariance, 0, new HashSet<>());
             if (backfit != null) {
                 this.m_Tree.backfitData(backfit);
             }
@@ -371,7 +380,8 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
     }
 
     public double[] distributionForInstance(Instance instance) throws Exception {
-        return this.m_zeroR != null ? this.m_zeroR.distributionForInstance(instance) : this.m_Tree.distributionForInstance(instance);
+        return this.m_zeroR != null ? this.m_zeroR.distributionForInstance(instance)
+                : this.m_Tree.distributionForInstance(instance);
     }
 
     public String toString() {
@@ -383,7 +393,10 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             buf.append(this.m_zeroR.toString());
             return buf.toString();
         } else {
-            return this.m_Tree == null ? "RandomTree: no model has been built yet." : "\nRandomTree\n==========\n" + this.m_Tree.toString(0) + "\n\nSize of the tree : " + this.m_Tree.numNodes() + (this.getMaxDepth() > 0 ? "\nMax depth of tree: " + this.getMaxDepth() : "");
+            return this.m_Tree == null ? "RandomTree: no model has been built yet."
+                    : "\nRandomTree\n==========\n" + this.m_Tree.toString(0) + "\n\nSize of the tree : "
+                            + this.m_Tree.numNodes()
+                            + (this.getMaxDepth() > 0 ? "\nMax depth of tree: " + this.getMaxDepth() : "");
         }
     }
 
@@ -392,7 +405,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             throw new Exception("RandomTree: No model built yet.");
         } else {
             StringBuffer resultBuff = new StringBuffer();
-            this.m_Tree.toGraph(resultBuff, 0, (RandomTree2.Tree)null);
+            this.m_Tree.toGraph(resultBuff, 0, (RandomTree2.Tree) null);
             String result = "digraph RandomTree {\nedge [style=bold]\n" + resultBuff.toString() + "\n}\n";
             return result;
         }
@@ -409,7 +422,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
     public double[] getMembershipValues(Instance instance) throws Exception {
         double[] a;
         if (this.m_zeroR != null) {
-            a = new double[]{instance.weight()};
+            a = new double[] { instance.weight() };
             return a;
         } else {
             a = new double[this.numElements()];
@@ -419,29 +432,29 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             queueOfNodes.add(this.m_Tree);
             int index = 0;
 
-            while(true) {
+            while (true) {
                 RandomTree2.Tree node;
                 do {
                     if (queueOfNodes.isEmpty()) {
                         return a;
                     }
 
-                    a[index++] = (Double)queueOfWeights.poll();
-                    node = (RandomTree2.Tree)queueOfNodes.poll();
-                } while(node.m_Attribute <= -1);
+                    a[index++] = (Double) queueOfWeights.poll();
+                    node = (RandomTree2.Tree) queueOfNodes.poll();
+                } while (node.m_Attribute <= -1);
 
                 double[] weights = new double[node.m_Successors.length];
                 if (instance.isMissing(node.m_Attribute)) {
                     System.arraycopy(node.m_Prop, 0, weights, 0, node.m_Prop.length);
                 } else if (this.m_Info.attribute(node.m_Attribute).isNominal()) {
-                    weights[(int)instance.value(node.m_Attribute)] = 1.0D;
+                    weights[(int) instance.value(node.m_Attribute)] = 1.0D;
                 } else if (instance.value(node.m_Attribute) < node.m_SplitPoint) {
                     weights[0] = 1.0D;
                 } else {
                     weights[1] = 1.0D;
                 }
 
-                for(int i = 0; i < node.m_Successors.length; ++i) {
+                for (int i = 0; i < node.m_Successors.length; ++i) {
                     queueOfNodes.add(node.m_Successors[i]);
                     queueOfWeights.add(a[index - 1] * weights[i]);
                 }
@@ -456,7 +469,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
     protected static double variance(double[] s, double[] sS, double[] sumOfWeights) {
         double var = 0.0D;
 
-        for(int i = 0; i < s.length; ++i) {
+        for (int i = 0; i < s.length; ++i) {
             if (sumOfWeights[i] > 0.0D) {
                 var += singleVariance(s[i], sS[i], sumOfWeights[i]);
             }
@@ -493,10 +506,10 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             double totalSumSquared = 0.0D;
             double[] classProbs = new double[data.numClasses()];
 
-            for(int i = 0; i < data.numInstances(); ++i) {
+            for (int i = 0; i < data.numInstances(); ++i) {
                 Instance inst = data.instance(i);
                 if (data.classAttribute().isNominal()) {
-                    int var10001 = (int)inst.classValue();
+                    int var10001 = (int) inst.classValue();
                     classProbs[var10001] += inst.weight();
                     totalWeight += inst.weight();
                 } else {
@@ -521,16 +534,17 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 if (instance.isMissing(this.m_Attribute)) {
                     returnedDist = new double[RandomTree2.this.m_Info.numClasses()];
 
-                    for(int i = 0; i < this.m_Successors.length; ++i) {
+                    for (int i = 0; i < this.m_Successors.length; ++i) {
                         double[] help = this.m_Successors[i].distributionForInstance(instance);
                         if (help != null) {
-                            for(int j = 0; j < help.length; ++j) {
+                            for (int j = 0; j < help.length; ++j) {
                                 returnedDist[j] += this.m_Prop[i] * help[j];
                             }
                         }
                     }
                 } else if (RandomTree2.this.m_Info.attribute(this.m_Attribute).isNominal()) {
-                    returnedDist = this.m_Successors[(int)instance.value(this.m_Attribute)].distributionForInstance(instance);
+                    returnedDist = this.m_Successors[(int) instance.value(this.m_Attribute)]
+                            .distributionForInstance(instance);
                 } else if (instance.value(this.m_Attribute) < this.m_SplitPoint) {
                     returnedDist = this.m_Successors[0].distributionForInstance(instance);
                 } else {
@@ -554,7 +568,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                         return null;
                     }
                 } else {
-                    result = (double[])this.m_ClassDistribution.clone();
+                    result = (double[]) this.m_ClassDistribution.clone();
                     if (RandomTree2.this.m_Info.classAttribute().isNominal()) {
                         Utils.normalize(result);
                     }
@@ -566,20 +580,28 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
         public int toGraph(StringBuffer text, int num) throws Exception {
             int maxIndex = Utils.maxIndex(this.m_ClassDistribution);
-            String classValue = RandomTree2.this.m_Info.classAttribute().isNominal() ? RandomTree2.this.m_Info.classAttribute().value(maxIndex) : Utils.doubleToString(this.m_ClassDistribution[0], RandomTree2.this.getNumDecimalPlaces());
+            String classValue = RandomTree2.this.m_Info.classAttribute().isNominal()
+                    ? RandomTree2.this.m_Info.classAttribute().value(maxIndex)
+                    : Utils.doubleToString(this.m_ClassDistribution[0], RandomTree2.this.getNumDecimalPlaces());
             ++num;
             if (this.m_Attribute == -1) {
-                text.append("N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num + ": " + classValue + "\"shape=box]\n");
+                text.append("N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num + ": " + classValue
+                        + "\"shape=box]\n");
             } else {
-                text.append("N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num + ": " + classValue + "\"]\n");
+                text.append(
+                        "N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num + ": " + classValue + "\"]\n");
 
-                for(int i = 0; i < this.m_Successors.length; ++i) {
-                    text.append("N" + Integer.toHexString(this.hashCode()) + "->N" + Integer.toHexString(this.m_Successors[i].hashCode()) + " [label=\"" + RandomTree2.this.m_Info.attribute(this.m_Attribute).name());
+                for (int i = 0; i < this.m_Successors.length; ++i) {
+                    text.append("N" + Integer.toHexString(this.hashCode()) + "->N"
+                            + Integer.toHexString(this.m_Successors[i].hashCode()) + " [label=\""
+                            + RandomTree2.this.m_Info.attribute(this.m_Attribute).name());
                     if (RandomTree2.this.m_Info.attribute(this.m_Attribute).isNumeric()) {
                         if (i == 0) {
-                            text.append(" < " + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
+                            text.append(" < "
+                                    + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
                         } else {
-                            text.append(" >= " + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
+                            text.append(" >= "
+                                    + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
                         }
                     } else {
                         text.append(" = " + RandomTree2.this.m_Info.attribute(this.m_Attribute).value(i));
@@ -613,8 +635,13 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             }
 
             return RandomTree2.this.m_Info.classAttribute().isNumeric() ? " : "
-                    + Utils.doubleToString(classMean, RandomTree2.this.getNumDecimalPlaces()) + " (" + Utils.doubleToString(this.m_Distribution[1], RandomTree2.this.getNumDecimalPlaces()) + "/" + Utils.doubleToString(avgError, RandomTree2.this.getNumDecimalPlaces()) + ")" : " : "
-                    + RandomTree2.this.m_Info.classAttribute().value(maxIndex) + " (" + Utils.doubleToString(sum, RandomTree2.this.getNumDecimalPlaces()) + "/" + Utils.doubleToString(sum - maxCount, RandomTree2.this.getNumDecimalPlaces()) + ")";
+                    + Utils.doubleToString(classMean, RandomTree2.this.getNumDecimalPlaces()) + " ("
+                    + Utils.doubleToString(this.m_Distribution[1], RandomTree2.this.getNumDecimalPlaces()) + "/"
+                    + Utils.doubleToString(avgError, RandomTree2.this.getNumDecimalPlaces()) + ")"
+                    : " : "
+                            + RandomTree2.this.m_Info.classAttribute().value(maxIndex) + " ("
+                            + Utils.doubleToString(sum, RandomTree2.this.getNumDecimalPlaces()) + "/"
+                            + Utils.doubleToString(sum - maxCount, RandomTree2.this.getNumDecimalPlaces()) + ")";
         }
 
         protected String toString(int level) {
@@ -625,32 +652,35 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 } else {
                     int i;
                     if (RandomTree2.this.m_Info.attribute(this.m_Attribute).isNominal()) {
-                        for(i = 0; i < this.m_Successors.length; ++i) {
+                        for (i = 0; i < this.m_Successors.length; ++i) {
                             text.append("\n");
 
-                            for(int j = 0; j < level; ++j) {
+                            for (int j = 0; j < level; ++j) {
                                 text.append("|   ");
                             }
 
-                            text.append(RandomTree2.this.m_Info.attribute(this.m_Attribute).name() + " = " + RandomTree2.this.m_Info.attribute(this.m_Attribute).value(i));
+                            text.append(RandomTree2.this.m_Info.attribute(this.m_Attribute).name() + " = "
+                                    + RandomTree2.this.m_Info.attribute(this.m_Attribute).value(i));
                             text.append(this.m_Successors[i].toString(level + 1));
                         }
                     } else {
                         text.append("\n");
 
-                        for(i = 0; i < level; ++i) {
+                        for (i = 0; i < level; ++i) {
                             text.append("|   ");
                         }
 
-                        text.append(RandomTree2.this.m_Info.attribute(this.m_Attribute).name() + " < " + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
+                        text.append(RandomTree2.this.m_Info.attribute(this.m_Attribute).name() + " < "
+                                + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
                         text.append(this.m_Successors[0].toString(level + 1));
                         text.append("\n");
 
-                        for(i = 0; i < level; ++i) {
+                        for (i = 0; i < level; ++i) {
                             text.append("|   ");
                         }
 
-                        text.append(RandomTree2.this.m_Info.attribute(this.m_Attribute).name() + " >= " + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
+                        text.append(RandomTree2.this.m_Info.attribute(this.m_Attribute).name() + " >= "
+                                + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
                         text.append(this.m_Successors[1].toString(level + 1));
                     }
 
@@ -678,7 +708,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     double totalSumSquared = 0.0D;
                     double totalSumOfWeights = 0.0D;
 
-                    for(int i = 0; i < data.numInstances(); ++i) {
+                    for (int i = 0; i < data.numInstances(); ++i) {
                         Instance inst = data.instance(i);
                         totalSum += inst.classValue() * inst.weight();
                         totalSumSquared += inst.classValue() * inst.classValue() * inst.weight();
@@ -688,18 +718,18 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     priorVar = RandomTree2.singleVariance(totalSum, totalSumSquared, totalSumOfWeights);
                 }
 
-                this.m_ClassDistribution = (double[])classProbs.clone();
+                this.m_ClassDistribution = (double[]) classProbs.clone();
                 if (this.m_Attribute > -1) {
                     this.m_Prop = new double[this.m_Successors.length];
 
                     int var10001;
-                    for(int ix = 0; ix < data.numInstances(); ++ix) {
+                    for (int ix = 0; ix < data.numInstances(); ++ix) {
                         Instance instx = data.instance(ix);
                         if (!instx.isMissing(this.m_Attribute)) {
                             double[] var10000;
                             if (data.attribute(this.m_Attribute).isNominal()) {
                                 var10000 = this.m_Prop;
-                                var10001 = (int)instx.value(this.m_Attribute);
+                                var10001 = (int) instx.value(this.m_Attribute);
                                 var10000[var10001] += instx.weight();
                             } else {
                                 var10000 = this.m_Prop;
@@ -725,13 +755,13 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     Instances[] subsets = this.splitData(data);
 
                     int ixx;
-                    for(ixx = 0; ixx < subsets.length; ++ixx) {
+                    for (ixx = 0; ixx < subsets.length; ++ixx) {
                         double[] dist = new double[data.numClasses()];
                         double sumOfWeights = 0.0D;
 
-                        for(int j = 0; j < subsets[ixx].numInstances(); ++j) {
+                        for (int j = 0; j < subsets[ixx].numInstances(); ++j) {
                             if (data.classAttribute().isNominal()) {
-                                var10001 = (int)subsets[ixx].instance(j).classValue();
+                                var10001 = (int) subsets[ixx].instance(j).classValue();
                                 dist[var10001] += subsets[ixx].instance(j).weight();
                             } else {
                                 dist[0] += subsets[ixx].instance(j).classValue() * subsets[ixx].instance(j).weight();
@@ -751,7 +781,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                         return;
                     }
 
-                    for(ixx = 0; ixx < subsets.length; ++ixx) {
+                    for (ixx = 0; ixx < subsets.length; ++ixx) {
                         if (this.m_Successors[ixx].m_ClassDistribution == null) {
                             return;
                         }
@@ -763,9 +793,11 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             }
         }
 
-        protected void buildTree(Instances data, double[] classProbs, int[] attIndicesWindow, double totalWeight, Random random, int depth, double minVariance, int attrCounter, Set<String> exceptAttrs) throws Exception {
+        protected void buildTree(Instances data, double[] classProbs, int[] attIndicesWindow, double totalWeight,
+                Random random, int depth, double minVariance, int attrCounter, Set<String> exceptAttrs)
+                throws Exception {
             if (data.numInstances() == 0) {
-            //if (data.numInstances() == 0 || data.numAttributes()-1 == attrCounter) {
+                // if (data.numInstances() == 0 || data.numAttributes()-1 == attrCounter) {
                 this.m_Attribute = -1;
                 this.m_ClassDistribution = null;
                 this.m_Prop = null;
@@ -783,7 +815,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     split = 0.0D;
                     double totalSumOfWeights = 0.0D;
 
-                    for(bestIndex = 0; bestIndex < data.numInstances(); ++bestIndex) {
+                    for (bestIndex = 0; bestIndex < data.numInstances(); ++bestIndex) {
                         Instance inst = data.instance(bestIndex);
                         val += inst.classValue() * inst.weight();
                         split += inst.classValue() * inst.classValue() * inst.weight();
@@ -797,9 +829,13 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     totalWeight = Utils.sum(classProbs);
                 }
 
-                if (totalWeight < 2.0D * RandomTree2.this.m_MinNum || data.classAttribute().isNominal() && Utils.eq(classProbs[Utils.maxIndex(classProbs)], Utils.sum(classProbs)) || data.classAttribute().isNumeric() && priorVar / totalWeight < minVariance || RandomTree2.this.getMaxDepth() > 0 && depth >= RandomTree2.this.getMaxDepth()) {
+                if (totalWeight < 2.0D * RandomTree2.this.m_MinNum
+                        || data.classAttribute().isNominal()
+                                && Utils.eq(classProbs[Utils.maxIndex(classProbs)], Utils.sum(classProbs))
+                        || data.classAttribute().isNumeric() && priorVar / totalWeight < minVariance
+                        || RandomTree2.this.getMaxDepth() > 0 && depth >= RandomTree2.this.getMaxDepth()) {
                     this.m_Attribute = -1;
-                    this.m_ClassDistribution = (double[])classProbs.clone();
+                    this.m_ClassDistribution = (double[]) classProbs.clone();
                     if (data.classAttribute().isNumeric()) {
                         this.m_Distribution = new double[2];
                         this.m_Distribution[0] = priorVar;
@@ -810,7 +846,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 } else {
                     val = -1.7976931348623157E308D;
                     split = -1.7976931348623157E308D;
-                    double[][] bestDists = (double[][])null;
+                    double[][] bestDists = (double[][]) null;
                     double[] bestProps = null;
                     bestIndex = 0;
                     double[][] props = new double[1][0];
@@ -828,16 +864,16 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     CorrelationAttributeEval eval_co = new CorrelationAttributeEval();
                     eval_gr.buildEvaluator(data);
                     eval_co.buildEvaluator(data);
-                    System.out.println("======================= LEVEL =======================");
-                    for(int i=0; i<data.numAttributes()-1; i++) {
+                    // System.out.println("======================= LEVEL =======================");
+                    for (int i = 0; i < data.numAttributes() - 1; i++) {
                         String attName = _attrNameMap.get(data.attribute(i).name());
                         double val_gr = eval_gr.evaluateAttribute(i);
                         double val_co = eval_co.evaluateAttribute(i);
-                        if(_attrScoreByName.containsKey(attName)) {
+                        if (_attrScoreByName.containsKey(attName)) {
                             double newScore = (val_gr + val_co) * _attrScoreByName.get(attName);
-                            //double newScore = (val_gr) * _attrScoreByName.get(attName);
+                            // double newScore = (val_gr) * _attrScoreByName.get(attName);
                             attScoreByName.put(attName, newScore);
-                            System.out.println(attName+","+val_gr+","+val_co+","+_attrScoreByName.get(attName)+","+newScore);
+                            // System.out.println(attName+","+val_gr+","+val_co+","+_attrScoreByName.get(attName)+","+newScore);
                         }
                     }
 
@@ -849,41 +885,49 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                         }
                     });
 
-                    while(windowSize > 0 && (k-- > 0 || !gainFound)) {
+                    while (windowSize > 0 && (k-- > 0 || !gainFound)) {
                         int chosenIndex = random.nextInt(windowSize);
-                        int attIndexx = attIndicesWindow[chosenIndex]; // after setting m_KValue, attIndex will traverse all attributes rather than randomly selecting
+                        int attIndexx = attIndicesWindow[chosenIndex]; // after setting m_KValue, attIndex will traverse
+                                                                       // all attributes rather than randomly selecting
                         attIndicesWindow[chosenIndex] = attIndicesWindow[windowSize - 1];
                         attIndicesWindow[windowSize - 1] = attIndexx;
                         --windowSize;
-                        double currSplit = data.classAttribute().isNominal() ? this.distribution(props, dists, attIndexx, data) : this.numericDistribution(props, dists, attIndexx, totalSubsetWeights, data, tempNumericVals);
+                        double currSplit = data.classAttribute().isNominal()
+                                ? this.distribution(props, dists, attIndexx, data)
+                                : this.numericDistribution(props, dists, attIndexx, totalSubsetWeights, data,
+                                        tempNumericVals);
 
-                        double currVal = data.classAttribute().isNominal() ? this.gain(dists[0], this.priorVal(dists[0])) : tempNumericVals[attIndexx];
-                        //double currVal;
-                        //if(data.classAttribute().isNominal()) {
-                        //    currVal = _attrScoreByName.get(_attrNameMap.get(data.attribute(attIndexx).name()));
-                        //} else {
-                        //    currVal = tempNumericVals[attIndexx];
-                        //}
+                        double currVal = data.classAttribute().isNominal()
+                                ? this.gain(dists[0], this.priorVal(dists[0]))
+                                : tempNumericVals[attIndexx];
+                        // double currVal;
+                        // if(data.classAttribute().isNominal()) {
+                        // currVal =
+                        // _attrScoreByName.get(_attrNameMap.get(data.attribute(attIndexx).name()));
+                        // } else {
+                        // currVal = tempNumericVals[attIndexx];
+                        // }
                         if (Utils.gr(currVal, 0.0D)) {
                             gainFound = true;
                         }
 
-                        if(exceptAttrs.contains(_attrNameMap.get(data.attribute(attIndexx).name()))) {
+                        if (exceptAttrs.contains(_attrNameMap.get(data.attribute(attIndexx).name()))) {
                             continue;
                         }
 
                         double currVal_comp = attScoreByName.get(_attrNameMap.get(data.attribute(attIndexx).name()));
-                        if (currVal_comp > val || !RandomTree2.this.getBreakTiesRandomly() && currVal_comp == val && attIndexx < bestIndex) {
-                        //if (currVal > val || !RandomTree2.this.getBreakTiesRandomly() && currVal == val && attIndexx < bestIndex) {
+                        if (currVal_comp > val || !RandomTree2.this.getBreakTiesRandomly() && currVal_comp == val
+                                && attIndexx < bestIndex) {
+                            // if (currVal > val || !RandomTree2.this.getBreakTiesRandomly() && currVal ==
+                            // val && attIndexx < bestIndex) {
                             val = currVal_comp;
-                            //val = currVal;
+                            // val = currVal;
                             bestIndex = attIndexx;
                             split = currSplit;
                             bestProps = props[0];
                             bestDists = dists[0];
                         }
                     }
-
 
                     this.m_Attribute = bestIndex;
                     if (Utils.gr(val, 0.0D)) {
@@ -899,38 +943,44 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                         this.m_Successors = new RandomTree2.Tree[bestDists.length];
                         double[] attTotalSubsetWeights = totalSubsetWeights[bestIndex];
 
-                        for(int i = 0; i < bestDists.length; ++i) {
+                        for (int i = 0; i < bestDists.length; ++i) {
                             this.m_Successors[i] = RandomTree2.this.new Tree(_attrScoreByName, _attrNameMap);
 
-                            // by 
+                            // by
                             // handle exit, e.g. there are only "2,pass" and "2,fail" left
-                            //if(subsets[i].numInstances() == 0) {
-                            //    continue;
-                            //}
+                            // if(subsets[i].numInstances() == 0) {
+                            // continue;
+                            // }
 
-                            // need to handle (0,n), the same attribute will be selected in next turn and never out of the loop
+                            // need to handle (0,n), the same attribute will be selected in next turn and
+                            // never out of the loop
                             Set<String> exceptA = new HashSet<>();
-                            if(subsets[i].numInstances() == data.numInstances()) {
+                            if (subsets[i].numInstances() == data.numInstances()) {
                                 boolean allOneClass = true;
-                                for(int j=0; j<subsets[i].numInstances()-2; j++) {
-                                    if(subsets[i].instance(j).classValue() != subsets[i].instance(j+1).classValue()) {
+                                for (int j = 0; j < subsets[i].numInstances() - 2; j++) {
+                                    if (subsets[i].instance(j).classValue() != subsets[i].instance(j + 1)
+                                            .classValue()) {
                                         allOneClass = false;
                                         break;
                                     }
                                 }
-                                if(!allOneClass) {
+                                if (!allOneClass) {
                                     exceptA.add(_attrNameMap.get(data.attribute(bestIndex).name()));
                                 }
                             }
-                            if(data.attribute(this.m_Attribute).isNominal()||!Double.isNaN(this.m_SplitPoint)) {
-                                this.m_Successors[i].buildTree(subsets[i], bestDists[i], attIndicesWindow, data.classAttribute().isNominal() ? 0.0D : attTotalSubsetWeights[i], random, depth + 1, minVariance, attrCounter, exceptA);
+                            if (data.attribute(this.m_Attribute).isNominal() || !Double.isNaN(this.m_SplitPoint)) {
+                                this.m_Successors[i].buildTree(subsets[i], bestDists[i], attIndicesWindow,
+                                        data.classAttribute().isNominal() ? 0.0D : attTotalSubsetWeights[i], random,
+                                        depth + 1, minVariance, attrCounter, exceptA);
                             }
-                            //this.m_Successors[i].buildTree(subsets[i], bestDists[i], attIndicesWindow, data.classAttribute().isNominal() ? 0.0D : attTotalSubsetWeights[i], random, depth + 1, minVariance, attrCounter, exceptA);
+                            // this.m_Successors[i].buildTree(subsets[i], bestDists[i], attIndicesWindow,
+                            // data.classAttribute().isNominal() ? 0.0D : attTotalSubsetWeights[i], random,
+                            // depth + 1, minVariance, attrCounter, exceptA);
                         }
 
                         boolean emptySuccessor = false;
 
-                        for(int ix = 0; ix < subsets.length; ++ix) {
+                        for (int ix = 0; ix < subsets.length; ++ix) {
                             if (this.m_Successors[ix].m_ClassDistribution == null) {
                                 emptySuccessor = true;
                                 break;
@@ -938,11 +988,11 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                         }
 
                         if (emptySuccessor) {
-                            this.m_ClassDistribution = (double[])classProbs.clone();
+                            this.m_ClassDistribution = (double[]) classProbs.clone();
                         }
                     } else {
                         this.m_Attribute = -1;
-                        this.m_ClassDistribution = (double[])classProbs.clone();
+                        this.m_ClassDistribution = (double[]) classProbs.clone();
                         if (data.classAttribute().isNumeric()) {
                             this.m_Distribution = new double[2];
                             this.m_Distribution[0] = priorVar;
@@ -962,7 +1012,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 RandomTree2.Tree[] var2 = this.m_Successors;
                 int var3 = var2.length;
 
-                for(int var4 = 0; var4 < var3; ++var4) {
+                for (int var4 = 0; var4 < var3; ++var4) {
                     RandomTree2.Tree m_Successor = var2[var4];
                     size += m_Successor.numNodes();
                 }
@@ -975,22 +1025,22 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             Instances[] subsets = new Instances[this.m_Prop.length];
 
             int i;
-            for(i = 0; i < this.m_Prop.length; ++i) {
+            for (i = 0; i < this.m_Prop.length; ++i) {
                 subsets[i] = new Instances(data, data.numInstances());
             }
 
-            for(i = 0; i < data.numInstances(); ++i) {
+            for (i = 0; i < data.numInstances(); ++i) {
                 Instance inst = data.instance(i);
                 if (inst.isMissing(this.m_Attribute)) {
-                    for(int k = 0; k < this.m_Prop.length; ++k) {
+                    for (int k = 0; k < this.m_Prop.length; ++k) {
                         if (this.m_Prop[k] > 0.0D) {
-                            Instance copy = (Instance)inst.copy();
-                            //copy.setWeight(this.m_Prop[k] * inst.weight());
+                            Instance copy = (Instance) inst.copy();
+                            // copy.setWeight(this.m_Prop[k] * inst.weight());
                             subsets[k].add(copy);
                         }
                     }
                 } else if (data.attribute(this.m_Attribute).isNominal()) {
-                    subsets[(int)inst.value(this.m_Attribute)].add(inst);
+                    subsets[(int) inst.value(this.m_Attribute)].add(inst);
                 } else {
                     if (!data.attribute(this.m_Attribute).isNumeric()) {
                         throw new IllegalArgumentException("Unknown attribute type");
@@ -1000,17 +1050,18 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 }
             }
 
-            for(i = 0; i < this.m_Prop.length; ++i) {
+            for (i = 0; i < this.m_Prop.length; ++i) {
                 subsets[i].compactify();
             }
 
             return subsets;
         }
 
-        protected double numericDistribution(double[][] props, double[][][] dists, int att, double[][] subsetWeights, Instances data, double[] vals) throws Exception {
+        protected double numericDistribution(double[][] props, double[][][] dists, int att, double[][] subsetWeights,
+                Instances data, double[] vals) throws Exception {
             double splitPoint = 0.0D / 0.0;
             Attribute attribute = data.attribute(att);
-            double[][] dist = (double[][])null;
+            double[][] dist = (double[][]) null;
             double[] sums = null;
             double[] sumSquared = null;
             double[] sumOfWeights = null;
@@ -1027,14 +1078,14 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 sumSquaredx = new double[attribute.numValues()];
                 sumOfWeightsx = new double[attribute.numValues()];
 
-                for(int i = 0; i < data.numInstances(); ++i) {
+                for (int i = 0; i < data.numInstances(); ++i) {
                     Instance inst = data.instance(i);
                     if (inst.isMissing(att)) {
                         if (indexOfFirstMissingValue == data.numInstances()) {
                             indexOfFirstMissingValue = i;
                         }
                     } else {
-                        jxxx = (int)inst.value(att);
+                        jxxx = (int) inst.value(att);
                         sumsx[jxxx] += inst.classValue() * inst.weight();
                         sumSquaredx[jxxx] += inst.classValue() * inst.classValue() * inst.weight();
                         sumOfWeightsx[jxxx] += inst.weight();
@@ -1053,7 +1104,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 double[] currSumOfWeights = new double[2];
                 data.sort(att);
 
-                for(int jx = 0; jx < data.numInstances(); ++jx) {
+                for (int jx = 0; jx < data.numInstances(); ++jx) {
                     Instance instx = data.instance(jx);
                     if (instx.isMissing(att)) {
                         indexOfFirstMissingValue = jx;
@@ -1074,7 +1125,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 double currSplit = data.instance(0).value(att);
                 double bestVal = 1.7976931348623157E308D;
 
-                for(int ix = 0; ix < indexOfFirstMissingValue; ++ix) {
+                for (int ix = 0; ix < indexOfFirstMissingValue; ++ix) {
                     Instance instxx = data.instance(ix);
                     if (instxx.value(att) > currSplit) {
                         double currVal = RandomTree2.variance(currSums, currSumSquared, currSumOfWeights);
@@ -1085,7 +1136,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                                 splitPoint = instxx.value(att);
                             }
 
-                            for(int jxx = 0; jxx < 2; ++jxx) {
+                            for (int jxx = 0; jxx < 2; ++jxx) {
                                 sumsx[jxx] = currSums[jxx];
                                 sumSquaredx[jxx] = currSumSquared[jxx];
                                 sumOfWeightsx[jxx] = currSumOfWeights[jxx];
@@ -1107,22 +1158,22 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
             props[0] = new double[sumsx.length];
 
-            for(jxxx = 0; jxxx < props[0].length; ++jxxx) {
+            for (jxxx = 0; jxxx < props[0].length; ++jxxx) {
                 props[0][jxxx] = sumOfWeightsx[jxxx];
             }
 
             if (!(Utils.sum(props[0]) > 0.0D)) {
-                for(jxxx = 0; jxxx < props[0].length; ++jxxx) {
-                    props[0][jxxx] = 1.0D / (double)props[0].length;
+                for (jxxx = 0; jxxx < props[0].length; ++jxxx) {
+                    props[0][jxxx] = 1.0D / (double) props[0].length;
                 }
             } else {
                 Utils.normalize(props[0]);
             }
 
-            for(jxxx = indexOfFirstMissingValue; jxxx < data.numInstances(); ++jxxx) {
+            for (jxxx = indexOfFirstMissingValue; jxxx < data.numInstances(); ++jxxx) {
                 Instance instxxx = data.instance(jxxx);
 
-                for(int j = 0; j < sumsx.length; ++j) {
+                for (int j = 0; j < sumsx.length; ++j) {
                     sumsx[j] += props[0][j] * instxxx.classValue() * instxxx.weight();
                     sumSquaredx[j] += props[0][j] * instxxx.classValue() * instxxx.classValue() * instxxx.weight();
                     sumOfWeightsx[j] += props[0][j] * instxxx.weight();
@@ -1135,7 +1186,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
             dist = new double[sumsx.length][data.numClasses()];
 
-            for(jxxx = 0; jxxx < sumsx.length; ++jxxx) {
+            for (jxxx = 0; jxxx < sumsx.length; ++jxxx) {
                 if (sumOfWeightsx[jxxx] > 0.0D) {
                     dist[jxxx][0] = sumsx[jxxx] / sumOfWeightsx[jxxx];
                 } else {
@@ -1155,7 +1206,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
         protected double distribution(double[][] props, double[][][] dists, int att, Instances data) throws Exception {
             double splitPoint = 0.0D / 0.0;
             Attribute attribute = data.attribute(att);
-            double[][] dist = (double[][])null;
+            double[][] dist = (double[][]) null;
             int indexOfFirstMissingValue = data.numInstances();
             int i;
             Instance inst;
@@ -1164,15 +1215,15 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             if (attribute.isNominal()) {
                 dist = new double[attribute.numValues()][data.numClasses()];
 
-                for(i = 0; i < data.numInstances(); ++i) {
+                for (i = 0; i < data.numInstances(); ++i) {
                     inst = data.instance(i);
                     if (inst.isMissing(att)) {
                         if (indexOfFirstMissingValue == data.numInstances()) {
                             indexOfFirstMissingValue = i;
                         }
                     } else {
-                        var10000 = dist[(int)inst.value(att)];
-                        var10001 = (int)inst.classValue();
+                        var10000 = dist[(int) inst.value(att)];
+                        var10001 = (int) inst.classValue();
                         var10000[var10001] += inst.weight();
                     }
                 }
@@ -1181,7 +1232,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                 dist = new double[2][data.numClasses()];
                 data.sort(att); // sort data by attr value in increasing order
 
-                for(int jx = 0; jx < data.numInstances(); ++jx) {
+                for (int jx = 0; jx < data.numInstances(); ++jx) {
                     Instance instx = data.instance(jx);
                     if (instx.isMissing(att)) {
                         indexOfFirstMissingValue = jx;
@@ -1189,24 +1240,24 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     }
 
                     var10000 = currDist[1];
-                    var10001 = (int)instx.classValue();
+                    var10001 = (int) instx.classValue();
                     var10000[var10001] += instx.weight();
                 }
 
                 double priorVal = this.priorVal(currDist);
 
-                for(int jxxx = 0; jxxx < currDist.length; ++jxxx) {
+                for (int jxxx = 0; jxxx < currDist.length; ++jxxx) {
                     System.arraycopy(currDist[jxxx], 0, dist[jxxx], 0, dist[jxxx].length);
                 }
 
                 double currSplit = data.instance(0).value(att);
                 double bestVal = -1.7976931348623157E308D;
 
-                for(int ix = 0; ix < data.numInstances(); ++ix) { // f**k, causing a lot NaN......
-                    if(data.instance(ix).isMissing(att)) {
+                for (int ix = 0; ix < data.numInstances(); ++ix) { // f**k, causing a lot NaN......
+                    if (data.instance(ix).isMissing(att)) {
                         continue;
                     }
-                //for(int ix = 0; ix < indexOfFirstMissingValue; ++ix) {
+                    // for(int ix = 0; ix < indexOfFirstMissingValue; ++ix) {
                     Instance instxx = data.instance(ix);
                     double attVal = instxx.value(att);
                     int j;
@@ -1219,7 +1270,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                                 splitPoint = attVal;
                             }
 
-                            for(j = 0; j < currDist.length; ++j) {
+                            for (j = 0; j < currDist.length; ++j) {
                                 System.arraycopy(currDist[j], 0, dist[j], 0, dist[j].length);
                             }
                         }
@@ -1227,7 +1278,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                         currSplit = attVal;
                     }
 
-                    j = (int)instxx.classValue();
+                    j = (int) instxx.classValue();
                     currDist[0][j] += instxx.weight();
                     currDist[1][j] -= instxx.weight();
                 }
@@ -1235,33 +1286,33 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
             props[0] = new double[dist.length];
 
-            for(i = 0; i < props[0].length; ++i) {
+            for (i = 0; i < props[0].length; ++i) {
                 props[0][i] = Utils.sum(dist[i]);
             }
 
             if (Utils.eq(Utils.sum(props[0]), 0.0D)) {
-                for(i = 0; i < props[0].length; ++i) {
-                    props[0][i] = 1.0D / (double)props[0].length;
+                for (i = 0; i < props[0].length; ++i) {
+                    props[0][i] = 1.0D / (double) props[0].length;
                 }
             } else {
                 Utils.normalize(props[0]);
             }
 
-            for(i = indexOfFirstMissingValue; i < data.numInstances(); ++i) {
+            for (i = indexOfFirstMissingValue; i < data.numInstances(); ++i) {
                 inst = data.instance(i);
                 int jxx;
                 if (attribute.isNominal()) {
                     if (inst.isMissing(att)) {
-                        for(jxx = 0; jxx < dist.length; ++jxx) {
+                        for (jxx = 0; jxx < dist.length; ++jxx) {
                             var10000 = dist[jxx];
-                            var10001 = (int)inst.classValue();
+                            var10001 = (int) inst.classValue();
                             var10000[var10001] += props[0][jxx] * inst.weight();
                         }
                     }
                 } else {
-                    for(jxx = 0; jxx < dist.length; ++jxx) {
+                    for (jxx = 0; jxx < dist.length; ++jxx) {
                         var10000 = dist[jxx];
-                        var10001 = (int)inst.classValue();
+                        var10001 = (int) inst.classValue();
                         var10000[var10001] += props[0][jxx] * inst.weight();
                     }
                 }
@@ -1286,20 +1337,26 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
         protected int toGraph(StringBuffer text, int num, RandomTree2.Tree parent) throws Exception {
             ++num;
             if (this.m_Attribute == -1) {
-                text.append("N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num + Utils.backQuoteChars(this.leafString()) + "\" shape=box]\n");
+                text.append("N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num
+                        + Utils.backQuoteChars(this.leafString()) + "\" shape=box]\n");
             } else {
-                text.append("N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num + ": " + Utils.backQuoteChars(RandomTree2.this.m_Info.attribute(this.m_Attribute).name()) + "\"]\n");
+                text.append("N" + Integer.toHexString(this.hashCode()) + " [label=\"" + num + ": "
+                        + Utils.backQuoteChars(RandomTree2.this.m_Info.attribute(this.m_Attribute).name()) + "\"]\n");
 
-                for(int i = 0; i < this.m_Successors.length; ++i) {
-                    text.append("N" + Integer.toHexString(this.hashCode()) + "->N" + Integer.toHexString(this.m_Successors[i].hashCode()) + " [label=\"");
+                for (int i = 0; i < this.m_Successors.length; ++i) {
+                    text.append("N" + Integer.toHexString(this.hashCode()) + "->N"
+                            + Integer.toHexString(this.m_Successors[i].hashCode()) + " [label=\"");
                     if (RandomTree2.this.m_Info.attribute(this.m_Attribute).isNumeric()) {
                         if (i == 0) {
-                            text.append(" < " + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
+                            text.append(" < "
+                                    + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
                         } else {
-                            text.append(" >= " + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
+                            text.append(" >= "
+                                    + Utils.doubleToString(this.m_SplitPoint, RandomTree2.this.getNumDecimalPlaces()));
                         }
                     } else {
-                        text.append(" = " + Utils.backQuoteChars(RandomTree2.this.m_Info.attribute(this.m_Attribute).value(i)));
+                        text.append(" = "
+                                + Utils.backQuoteChars(RandomTree2.this.m_Info.attribute(this.m_Attribute).value(i)));
                     }
 
                     text.append("\"]\n");
@@ -1313,7 +1370,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
         @Override
         public double[] leafScore(int rootdist) {
 
-            //new
+            // new
             double[] info = new double[7];
             info[0] = 0.0;
             info[1] = 0.0;
@@ -1322,7 +1379,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             info[4] = 0.0;
             info[5] = rootdist;
             info[6] = Double.MAX_VALUE;// fail distance
-            if(this.m_Successors == null) { // leaf node, PASS/FAIL
+            if (this.m_Successors == null) { // leaf node, PASS/FAIL
                 if (this.m_ClassDistribution != null) {
                     double dist_pass = this.m_ClassDistribution[0];
                     double dist_fail = this.m_ClassDistribution[1];
@@ -1330,31 +1387,33 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
                     info[0] = dist_fail;
                     info[1] = dist_pass;
                     info[2] = total;
-                    info[3] = 1 - (dist_fail/total) * (dist_fail/total) + (dist_pass/total) * (dist_pass/total); // calculate gini
+                    info[3] = 1 - (dist_fail / total) * (dist_fail / total) + (dist_pass / total) * (dist_pass / total); // calculate
+                                                                                                                         // gini
                     info[4] = dist_fail > dist_pass ? 1.0 : 0.0;
                     info[5] = rootdist;
-                    if(info[4]==1.0){
+                    if (info[4] == 1.0) {
                         info[6] = 0;
                     }
                 }
                 return info;
             }
-            for (int i=0; i<this.m_Successors.length; i++) {
-                double[] childinfo = this.m_Successors[i].leafScore(rootdist+1);
+            for (int i = 0; i < this.m_Successors.length; i++) {
+                double[] childinfo = this.m_Successors[i].leafScore(rootdist + 1);
                 info[0] += childinfo[0];
                 info[1] += childinfo[1];
                 info[2] += childinfo[2];
             }
-            for (int i=0; i<this.m_Successors.length; i++) {
-                double[] childinfo = this.m_Successors[i].leafScore(rootdist+1);
+            for (int i = 0; i < this.m_Successors.length; i++) {
+                double[] childinfo = this.m_Successors[i].leafScore(rootdist + 1);
                 if (childinfo[2] == 0.0) {
                     continue;
                 }
-                info[3] += (childinfo[2] / info[2]) * (1 - (childinfo[0]/childinfo[2]) * (childinfo[0]/childinfo[2]) - (childinfo[1]/childinfo[2]) * (childinfo[1]/childinfo[2])); // calculate gini
+                info[3] += (childinfo[2] / info[2]) * (1 - (childinfo[0] / childinfo[2]) * (childinfo[0] / childinfo[2])
+                        - (childinfo[1] / childinfo[2]) * (childinfo[1] / childinfo[2])); // calculate gini
                 info[4] += childinfo[4];
-                if (childinfo[6]==0) {
-                    double newdist = Math.abs(info[5]-childinfo[5]);
-                    if (info[6]>newdist) {
+                if (childinfo[6] == 0) {
+                    double newdist = Math.abs(info[5] - childinfo[5]);
+                    if (info[6] > newdist) {
                         info[6] = newdist;
                     }
                 }
@@ -1366,33 +1425,33 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
             double aScore = (1 - info[3]);
 
             // consider test number
-            aScore *= Math.pow(info[2],1.0/2);
+            aScore *= Math.pow(info[2], 1.0 / 2);
 
             // consider "FAIL" node
-            //aScore *= (1 + info[4]);
+            // aScore *= (1 + info[4]);
 
             // consider branch number
             int branchNum = this.m_Successors.length;
-            for (int i=0; i<this.m_Successors.length; i++) {
-                double[] childinfo = this.m_Successors[i].leafScore(rootdist+1);
+            for (int i = 0; i < this.m_Successors.length; i++) {
+                double[] childinfo = this.m_Successors[i].leafScore(rootdist + 1);
                 if (childinfo[2] == 0.0) {
                     branchNum--;
                 }
             }
             if (RandomTree2.this.m_Info.attribute(this.m_Attribute).isNominal() && branchNum > 2) {
-                //aScore /= branchNum;
+                // aScore /= branchNum;
             }
-            
+
             // consider fail node distance
             aScore /= info[6];
 
             // consider pdg score
-            //aScore *= _attrScoreByName.get(_attrNameMap.get(aName));
+            // aScore *= _attrScoreByName.get(_attrNameMap.get(aName));
             aScore += _attrScoreByName.get(_attrNameMap.get(aName));
 
-            if(_reorderedAttrs.containsKey(aName)) {
+            if (_reorderedAttrs.containsKey(aName)) {
                 double oldscore = _reorderedAttrs.get(aName);
-                if(oldscore<aScore){
+                if (oldscore < aScore) {
                     _reorderedAttrs.put(aName, aScore);
                 }
             } else {
@@ -1401,54 +1460,56 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
             return info;
 
-/*
-            // original
-            double[] result = new double[2];
-            result[0] = 0.0;
-            result[1] = 0.0;
-            if(Double.isNaN(this.m_SplitPoint) && this.m_Attribute != -1 && RandomTree2.this.m_Info.attribute(this.m_Attribute).isNumeric()) {
-                return result;
-            }
-            if(this.m_Attribute == -1 && this.m_ClassDistribution != null) {
-                result[0] = Utils.sum(this.m_ClassDistribution);
-                result[1] = result[0] - this.m_ClassDistribution[Utils.maxIndex(this.m_ClassDistribution)];
-            } else {
-                if(this.m_ClassDistribution != null) {
-                    result[0] += this.m_ClassDistribution[0];
-                    result[1] += this.m_ClassDistribution[1];
-                }
-                if(this.m_Successors != null) {
-                    for(int i=0; i<this.m_Successors.length; i++) {
-                        double[] tmp = this.m_Successors[i].leafScore(0);
-                        //result[0] *= tmp[0] == 0 ? 1 : tmp[0];
-                        //result[1] *= tmp[1] == 0 ? 1 : tmp[1];
-                        result[0] += tmp[0];
-                        result[1] += tmp[1];
-                    }
-                }
-            }
-            if(this.m_Attribute != -1) {
-                String aName = RandomTree2.this.m_Info.attribute(this.m_Attribute).name();
-                double aScore;
-                if(result[0] == 0) {
-                    aScore = 1;
-                } else {
-                    aScore = result[1] / result[0];
-                }
-                aScore = 0.5 * aScore + 0.5 * _attrScoreByName.get(_attrNameMap.get(aName));
-
-                // consider number of covered test for each method
-                //aScore *= Math.pow(_testScale, 0.5);
-
-                _reorderedAttrs.put(aName, aScore);
-            }
-            return result;
-*/
+            /*
+             * // original
+             * double[] result = new double[2];
+             * result[0] = 0.0;
+             * result[1] = 0.0;
+             * if(Double.isNaN(this.m_SplitPoint) && this.m_Attribute != -1 &&
+             * RandomTree2.this.m_Info.attribute(this.m_Attribute).isNumeric()) {
+             * return result;
+             * }
+             * if(this.m_Attribute == -1 && this.m_ClassDistribution != null) {
+             * result[0] = Utils.sum(this.m_ClassDistribution);
+             * result[1] = result[0] -
+             * this.m_ClassDistribution[Utils.maxIndex(this.m_ClassDistribution)];
+             * } else {
+             * if(this.m_ClassDistribution != null) {
+             * result[0] += this.m_ClassDistribution[0];
+             * result[1] += this.m_ClassDistribution[1];
+             * }
+             * if(this.m_Successors != null) {
+             * for(int i=0; i<this.m_Successors.length; i++) {
+             * double[] tmp = this.m_Successors[i].leafScore(0);
+             * //result[0] *= tmp[0] == 0 ? 1 : tmp[0];
+             * //result[1] *= tmp[1] == 0 ? 1 : tmp[1];
+             * result[0] += tmp[0];
+             * result[1] += tmp[1];
+             * }
+             * }
+             * }
+             * if(this.m_Attribute != -1) {
+             * String aName = RandomTree2.this.m_Info.attribute(this.m_Attribute).name();
+             * double aScore;
+             * if(result[0] == 0) {
+             * aScore = 1;
+             * } else {
+             * aScore = result[1] / result[0];
+             * }
+             * aScore = 0.5 * aScore + 0.5 * _attrScoreByName.get(_attrNameMap.get(aName));
+             * 
+             * // consider number of covered test for each method
+             * //aScore *= Math.pow(_testScale, 0.5);
+             * 
+             * _reorderedAttrs.put(aName, aScore);
+             * }
+             * return result;
+             */
         }
 
         @Override
         public Map<String, Double> reorder() {
-            if(this == null) {
+            if (this == null) {
                 return _reorderedAttrs;
             }
             leafScore(0);
@@ -1458,7 +1519,7 @@ public class RandomTree2 extends AbstractClassifier implements OptionHandler, We
 
     private abstract class DT {
         public abstract double[] leafScore(int rootDist);
+
         public abstract Map<String, Double> reorder();
     }
 }
-
