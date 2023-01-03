@@ -204,7 +204,9 @@ def main():
 if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
-    for bugid in range(1,21):
+    available_bugs = [3]
+    #for bugid in range(1,21):
+    for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'
         values_path = root_dir + "values.txt"
         if not os.path.exists(root_dir) or not os.path.exists(values_path):

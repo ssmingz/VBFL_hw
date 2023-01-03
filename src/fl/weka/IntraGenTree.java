@@ -46,8 +46,10 @@ public class IntraGenTree {
     // 21-43:21，27，30，32，33，34，43
     public static void main(String[] args) {
         checkLog("/mnt/code/VBFL_hw/logs");
-        int[] bids = { 21, 27, 30, 32, 33, 34, 43 };
-        for (int i = 1; i <= 43; i++) {
+        int[] bids = {};
+        int[] available_bugs = { 3 };
+        for (int i : available_bugs) {
+            // for (int i = 1; i <= 43; i++) {
             if (!ArrayUtils.contains(bids, i)) {
                 String root_dir = "/mnt/values/trees/bug_" + i + "/";
                 String mid_path = "/mnt/values/trees/bug_" + i + "/instrumented_method_id.txt";
