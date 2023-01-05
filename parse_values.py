@@ -196,7 +196,7 @@ def main():
                 for r1 in r:
                     each.write(r1.test_name + "\n")
                     for v1 in r1.value_list:
-                        if v1.startswith(value):
+                        if v1.startswith(f'{value}#'):
                             each.write(v1.split("#")[1] + "\n")
                     each.write(r1.test_result + "\n")
 
@@ -204,7 +204,7 @@ def main():
 if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
-    available_bugs = [3]
+    available_bugs = [2,3,4,6,7,8,9,12,14,17,20,22,23,24,25,26,28,29,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,622]
     #for bugid in range(1,21):
     for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'

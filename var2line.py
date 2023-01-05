@@ -16,11 +16,14 @@ class Var2Line:
             for l in f:
                 if beginning:
                     lineNo = l.split(' ')[1].split('-')[1].split('/')[0]
+                    #if lineNo.isdigit() and 'Binary_Expression' not in self.find_inst_in_values(l.split(' ')[1]):
                     if lineNo.isdigit():
                         inst = {}
                         inst['reorder_score'] = l.split(' ')[2]
                         inst['pdg_score'] = l.split(' ')[3]
                         inst['ori_variable'] = l.split(' ')[1]
+                        inst['value_type'] = self.find_inst_in_values(inst['ori_variable']).split('/')[0]
+                        inst['path'] = self.find_inst_in_values(inst['ori_variable']).split(':')[0]
                         line_list[lineNo] = inst
                 if l.strip() == 'Reorder:':
                     beginning = True

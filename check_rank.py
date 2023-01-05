@@ -13,7 +13,7 @@ with open(groundtruth_path, 'r') as f:
         gt_list[int(i)] = line.strip()
 
 logBuf = ''
-available_bugs = [3,4,6,7,8,17,22,23,24,25,26,28,29,31,35,36,37,38,39,40,41,42]
+available_bugs = [45,46,48,51,52,53,58,59,60]
 for i in available_bugs:
 #for i in range(1,43):
     if i not in gt_list.keys():
