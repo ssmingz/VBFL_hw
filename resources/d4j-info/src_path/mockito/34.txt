@@ -1,4 +1,0 @@
-/src
-/target/classes
-/test
-/target/test-classes
