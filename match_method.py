@@ -1,8 +1,11 @@
 import os
 import collections
 import lizard
-#graph_map.txt格式:源文件,方法名,起始行,结束行,图文件
-for i in range(1, 43):
+
+available_bugs = [5,10,16]
+#graph_map.txt格式:源文件,方法名&起始行&结束行,图文件
+#for i in range(1, 43):
+for i in available_bugs:
     graph_root = f'/mnt/autoRun/graphs/{i}/graph'
     output_file = f'/mnt/values/{i}/graph_map.txt'
     method_dict=collections.OrderedDict()
@@ -25,7 +28,7 @@ for i in range(1, 43):
             if method.start_line == method.end_line:
                 continue
             if method.start_line <= int(lineNo) <= method.end_line:
-                actual_name = f'{abspath},{method.unqualified_name},{method.start_line},{method.end_line}'
+                actual_name = f'{abspath},{method.unqualified_name}&{method.start_line}&{method.end_line}'
                 if method.unqualified_name != '_GLIBCXX_VISIBILITY':
                     method_dict[actual_name] = f'{graph_root}/{graph_file}'
                     flag = True

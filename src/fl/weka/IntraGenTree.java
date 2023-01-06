@@ -47,7 +47,7 @@ public class IntraGenTree {
     public static void main(String[] args) {
         checkLog("/mnt/code/VBFL_hw/logs");
         int[] bids = {};
-        int[] available_bugs = { 38 };
+        int[] available_bugs = { 5, 10, 16 };
         for (int i : available_bugs) {
             // for (int i = 1; i <= 43; i++) {
             if (!ArrayUtils.contains(bids, i)) {
@@ -115,6 +115,7 @@ public class IntraGenTree {
     }
 
     private static String parse_graph_path(String graph_map_path) {
+        // 19:/mnt/out_put/38_llvm/mysql-server-source/sql/item_cmpfunc.cc#?#resolve_type&6096&6121#?
         File file = new File(graph_map_path);
         try {
             FileReader fr = new FileReader(file);
@@ -123,7 +124,7 @@ public class IntraGenTree {
             while ((line = br.readLine()) != null) {
                 String src_file = line.split(",")[0];
                 String method = line.split(",")[1];
-                String graph_file = line.split(",")[4].trim();
+                String graph_file = line.split(",")[2].trim();
                 if ((src_file.equals(CLAZZ) && method.equals(METHOD))
                         || graph_file.endsWith("/" + METHOD + ".txt"))
                     return graph_file;

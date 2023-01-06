@@ -13,19 +13,24 @@ with open(groundtruth_path, 'r') as f:
         gt_list[int(i)] = line.strip()
 
 logBuf = ''
-available_bugs = [45,46,48,51,52,53,58,59,60]
+available_bugs = [5,10,16]
 for i in available_bugs:
-#for i in range(1,43):
+#for i in range(1,63):
     if i not in gt_list.keys():
         continue
     gt_file = gt_list[i].split(',')[2]
     gt_lines = gt_list[i].split(',')[3].split(':')
     gt_method = ''
+    gt_m_startline, gt_m_endline = 0, 0
     src_file = f'/mnt/out_put/{i}_llvm/mysql-server-source/{gt_file}'
 
     value_file = f'{values_root}/{i}/values.txt'
     if not os.path.exists(value_file):
         print(f'bug {i} : no value file for bug {i}')
+        continue
+    graph_map = f'{values_root}/{i}/graph_map.txt'
+    if not os.path.exists(graph_map):
+        print(f'bug {i} : no graph map file for bug {i}')
         continue
 
     methods = lizard.analyze_file(src_file)
@@ -35,6 +40,8 @@ for i in available_bugs:
             for gt_line in gt_lines:
                 if method.start_line <= int(gt_line) <= method.end_line:
                     gt_method = method.unqualified_name
+                    gt_m_startline = method.start_line
+                    gt_m_endline = method.end_line
                     flag = True
                     break
 
@@ -42,15 +49,18 @@ for i in available_bugs:
     if not os.path.exists(method_id_path):
         print(f'bug {i} : no instrumented_method_id.txt')
         continue
+    flag = False
     with open(method_id_path, 'r') as f:
         for line in f:
             mid = line.split(':')[0]
             fname = line.split(':')[1].split('#')[0]
             mname = line.split(':')[1].split('#')[2]
-
-            if not fname.endswith(gt_file) or not mname == gt_method:
+            mstartline, mendline = 0, 0
+            
+            if not fname.endswith(gt_file) or mname != f'{gt_method}&{gt_m_startline}&{gt_m_endline}':
                 continue
-
+            
+            flag = True
             tree_file = f'{trees_root}/bug_{i}/{mid}/tree'
             if not os.path.exists(tree_file):
                 print(f'bug {i} : no tree file for groundtruth method {i}')
@@ -64,6 +74,7 @@ for i in available_bugs:
 
             # rank
             counter, gt_rank = 0, 999999999
+            binary_exp_counter = 0
             for lineNo in line_mapping_without_args.keys():
                 counter += 1
                 if lineNo in gt_lines and counter < gt_rank:
@@ -72,6 +83,5 @@ for i in available_bugs:
                 print(f'bug {i} : no tree generated for groundtruth method {mid}')
             else:
                 print(f'bug {i} : {gt_rank}/{counter} method {mid}')
-
-            
-
+    if not flag:
+        print(f'bug {i} : no values collected for groundtruth method {mid}')

@@ -4,11 +4,13 @@ import sys
 import single_test
 import object_type
 import re
+import lizard
 
 type_list = ["Condition", "MethodArgument", "Variable", "Binary_Expression", "Return_Expression"]
 attr_type_list = ["Value", "isNull", "TYPE", "length"]  # see comments in get_func()
 attr_postfix = "{PRED}"
 method_map = {}
+method_name_map = {}
 
 
 def deal_with_Value(attr: str) -> list:
@@ -136,9 +138,24 @@ def parse_test(whole_file):
 
             var_str = var_key[0].split(var_type)[1].split(":")[-1].strip()
             var_info = var_key[0].split(var_type)[1][:var_key[0].split(var_type)[1].find(var_str)-1].strip()
-            print(v)
+            
+            # get real method name
+            var_mname = var_info.split('|')[-1]
+            src_file = var_info.split('|')[0]
             var_line = var_str.split("|")[0]
             var_col = var_str.split("|")[1].split("-")[0]
+            if method_name_map.get(var_mname) == None:
+                methods = lizard.analyze_file(src_file)
+                for m in methods.function_list:
+                    if m.start_line <= int(var_line) <= m.end_line:
+                        real_mname = f'{m.unqualified_name}&{m.start_line}&{m.end_line}'
+                        method_name_map[var_mname] = real_mname
+                        var_info = var_info.replace(var_mname, real_mname)
+                        break
+            else:
+                var_info = var_info.replace(var_mname, method_name_map.get(var_mname))
+            
+            print(v)
             if "-" in var_str:
                 var_name = var_str.split("-")[1]
             else:
@@ -205,7 +222,7 @@ if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
     #available_bugs = [2,3,4,6,7,8,9,12,14,17,20,22,23,24,25,26,28,29,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,622]
-    available_bugs = [23]
+    available_bugs = [5,10,16]
     #for bugid in range(1,21):
     for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'
@@ -213,10 +230,13 @@ if __name__ == '__main__':
         if not os.path.exists(root_dir) or not os.path.exists(values_path):
             continue
         output_dir = f'/mnt/values/trees/bug_{bugid}/'
-        if not os.path.exists(output_dir):
+        if os.path.exists(output_dir):
+            os.system(f'rm -rf {output_dir}*')
+        else:
             os.makedirs(output_dir)
         output_path = output_dir + "original.txt"
         instr_output_path = output_dir + "instrumented_method_id.txt"
         main()
         method_map.clear()
+        method_name_map.clear()
     print("Finish")
