@@ -204,7 +204,8 @@ def main():
 if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
-    available_bugs = [2,3,4,6,7,8,9,12,14,17,20,22,23,24,25,26,28,29,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,622]
+    #available_bugs = [2,3,4,6,7,8,9,12,14,17,20,22,23,24,25,26,28,29,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,622]
+    available_bugs = [23]
     #for bugid in range(1,21):
     for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'

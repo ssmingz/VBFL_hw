@@ -47,7 +47,7 @@ public class IntraGenTree {
     public static void main(String[] args) {
         checkLog("/mnt/code/VBFL_hw/logs");
         int[] bids = {};
-        int[] available_bugs = { 62 };
+        int[] available_bugs = { 38 };
         for (int i : available_bugs) {
             // for (int i = 1; i <= 43; i++) {
             if (!ArrayUtils.contains(bids, i)) {
@@ -124,7 +124,8 @@ public class IntraGenTree {
                 String src_file = line.split(",")[0];
                 String method = line.split(",")[1];
                 String graph_file = line.split(",")[4].trim();
-                if (src_file.equals(CLAZZ) && method.equals(METHOD))
+                if ((src_file.equals(CLAZZ) && method.equals(METHOD))
+                        || graph_file.endsWith("/" + METHOD + ".txt"))
                     return graph_file;
             }
         } catch (FileNotFoundException e) {
