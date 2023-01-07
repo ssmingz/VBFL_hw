@@ -139,9 +139,6 @@ def parse_test(whole_file):
             var_str = var_key[0].split(var_type)[1].split(":")[-1].strip()
             var_info = var_key[0].split(var_type)[1][:var_key[0].split(var_type)[1].find(var_str)-1].strip()
             
-            if 'get_filtering_effect' in var_info and '4775' in var_str:
-                print('debug')
-
             # get real method name
             var_mname = var_info.split('|')[-1]
             src_file = var_info.split('|')[0]
