@@ -61,6 +61,27 @@ class Var2Line:
                     line_mapping_without_args[lineNo] = info
         return line_mapping_without_args
 
+
+    def aggre_methods(self, line_mapping, sbfl_path, fname, mname):
+        line_mapping_with_methods = collections.OrderedDict()
+        start_line = int(mname.split('&')[-2])
+        end_line = int(mname.split('&')[-1])
+        for line,info in line_mapping.items():
+            method_score = 1.0
+            with open(sbfl_path, 'r') as f:
+                for l in f:
+                    sbfl_f = l.split(',')[0].split('#')[0]
+                    if fname.endswith(sbfl_f):
+                        sbfl_l = int(l.split(',')[0].split('#')[-1])
+                        if start_line <= sbfl_l <= end_line:
+                            method_score = float(l.strip().split(',')[-1])
+                            break
+            info['sbfl_method'] = method_score
+            info['score_with_method'] = float(info['reorder_score']) * method_score * method_score  # calculate with all methods
+            line_mapping_with_methods[f'{fname}#{mname}#{line}'] = info
+        return line_mapping_with_methods
+
+
     def print(self, line_mapping, output_path):
         with open(output_path, 'w') as f:
             for lineNo,info in line_mapping.items():
