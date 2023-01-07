@@ -60,75 +60,80 @@ public class DependencyParser2 extends DependencyParser {
     }
 
     private DependencyGraphVertex addNode(String[] node) {
-        int line = Integer.parseInt(node[2].split("\\|")[0]);
-        int column = Integer.parseInt(node[2].split("\\|")[1]);
-        // %11 = load i32, i32* %4, align 4, !dbg
-        // !23-Variable:main:int:28|17:a:/home/liu/桌面/Projects/MyPass/testa.c
-        /*
-         * from##def-use
-         * value## %12 = load i32, i32* %4, align 4, !dbg !4140
-         * irtype##Variable
-         * mthname##_Z4loopv
-         * nodetype##int
-         * location##26|11
-         * valuename##i
-         * absFilename##/home/liu/桌面/Projects/MyPass/test.cpp
-         */
         DependencyGraphVertex vertex = null;
-        if (node[1].equals("null"))// test test.cpp
+        if (node[2].split("\\|").length > 1) {
+            int line = Integer.parseInt(node[2].split("\\|")[0]);
+            int column = Integer.parseInt(node[2].split("\\|")[1]);
+            // %11 = load i32, i32* %4, align 4, !dbg
+            // !23-Variable:main:int:28|17:a:/home/liu/桌面/Projects/MyPass/testa.c
+            /*
+             * from##def-use
+             * value## %12 = load i32, i32* %4, align 4, !dbg !4140
+             * irtype##Variable
+             * mthname##_Z4loopv
+             * nodetype##int
+             * location##26|11
+             * valuename##i
+             * absFilename##/home/liu/桌面/Projects/MyPass/test.cpp
+             */
+            if (node[1].equals("null"))// test test.cpp
+                return vertex;
+            // if (line == 0 || column == 0) {
+            // return vertex;
+            // }
+            if (node[5].equals("Expression")) {
+                vertex = new TempVertex(node[0], node[4], line, node[1], column, 0);// node[1]
+            } else {// if (node[0].equals("Variable"))
+                vertex = new VariableVertex(node[0], node[4], line, node[1], column);
+            }
+            dependencyGraph.addVertex(vertex);
             return vertex;
-//        if (line == 0 || column == 0) {
-//            return vertex;
-//        }
-        if (node[5].equals("Expression")) {
-            vertex = new TempVertex(node[0], node[4], line, node[1], column, 0);// node[1]
-        } else {// if (node[0].equals("Variable"))
-            vertex = new VariableVertex(node[0], node[4], line, node[1], column);
         }
-        dependencyGraph.addVertex(vertex);
         return vertex;
     }
 
     private DependencyGraphVertex genNode(String[] node) {
         int line = 0, column = 0;
-        try {
-            line = Integer.parseInt(node[2].split("\\|")[0]);
-            column = Integer.parseInt(node[2].split("\\|")[1]);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Map<String, DependencyGraphVertex> vertexes = dependencyGraph.getVertexes();
-        for (String key : vertexes.keySet()) {
-            DependencyGraphVertex vertex = vertexes.get(key);
-            int tline = 0;
-            int tcolumn = 0;
-            if (vertex instanceof VariableVertex) {
-                VariableVertex temp = ((VariableVertex) vertex);
-                tline = temp.getLineNo();
-                tcolumn = temp.getColNo();
-                if (line == tline && column == tcolumn) {
-                    if (!node[1].equals("null") && !node[4].equals("null")
-                            && (temp.getMethodName().equals("null") || temp.getVarName().equals("null"))) {
-                        temp.setMethodName(node[4]);
-                        temp.setVarName(node[1]);
-                        vertexes.remove(key);
-                        dependencyGraph.addVertex(temp);
+        if (node[2].split("\\|").length > 1) {
+            try {
+                line = Integer.parseInt(node[2].split("\\|")[0]);
+                column = Integer.parseInt(node[2].split("\\|")[1]);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Map<String, DependencyGraphVertex> vertexes = dependencyGraph.getVertexes();
+            for (String key : vertexes.keySet()) {
+                DependencyGraphVertex vertex = vertexes.get(key);
+                int tline = 0;
+                int tcolumn = 0;
+                if (vertex instanceof VariableVertex) {
+                    VariableVertex temp = ((VariableVertex) vertex);
+                    tline = temp.getLineNo();
+                    tcolumn = temp.getColNo();
+                    if (line == tline && column == tcolumn) {
+                        if (!node[1].equals("null") && !node[4].equals("null")
+                                && (temp.getMethodName().equals("null") || temp.getVarName().equals("null"))) {
+                            temp.setMethodName(node[4]);
+                            temp.setVarName(node[1]);
+                            vertexes.remove(key);
+                            dependencyGraph.addVertex(temp);
+                        }
+                        return vertex;
                     }
-                    return vertex;
-                }
-            } else if (vertex instanceof TempVertex) {
-                TempVertex temp = ((TempVertex) vertex);
-                tline = temp.getLineNo();
-                tcolumn = temp.getColNo();
-                if (line == tline && column == tcolumn) {
-                    if (!node[1].equals("null") && !node[4].equals("null")
-                            && (temp.getMethodName().equals("null") || temp.getVarName().equals("null"))) {
-                        temp.setMethodName(node[4]);
-                        temp.setVarName(node[1]);
-                        vertexes.remove(key);
-                        dependencyGraph.addVertex(temp);
+                } else if (vertex instanceof TempVertex) {
+                    TempVertex temp = ((TempVertex) vertex);
+                    tline = temp.getLineNo();
+                    tcolumn = temp.getColNo();
+                    if (line == tline && column == tcolumn) {
+                        if (!node[1].equals("null") && !node[4].equals("null")
+                                && (temp.getMethodName().equals("null") || temp.getVarName().equals("null"))) {
+                            temp.setMethodName(node[4]);
+                            temp.setVarName(node[1]);
+                            vertexes.remove(key);
+                            dependencyGraph.addVertex(temp);
+                        }
+                        return vertex;
                     }
-                    return vertex;
                 }
             }
         }

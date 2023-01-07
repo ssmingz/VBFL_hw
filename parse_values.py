@@ -139,22 +139,35 @@ def parse_test(whole_file):
             var_str = var_key[0].split(var_type)[1].split(":")[-1].strip()
             var_info = var_key[0].split(var_type)[1][:var_key[0].split(var_type)[1].find(var_str)-1].strip()
             
+            if 'get_filtering_effect' in var_info and '4775' in var_str:
+                print('debug')
+
             # get real method name
             var_mname = var_info.split('|')[-1]
             src_file = var_info.split('|')[0]
             var_line = var_str.split("|")[0]
             var_col = var_str.split("|")[1].split("-")[0]
-            if method_name_map.get(var_mname) == None:
+            addNew = True
+            if method_name_map.get(var_mname) != None:
+                for line_range, name in method_name_map.get(var_mname).items():
+                    if int(line_range.split('_')[0]) <= int(var_line) <= int(line_range.split('_')[1]):
+                        var_info = var_info.replace(f'|{var_mname}', f'|{name}')
+                        addNew = False
+                        break
+            if addNew:
                 methods = lizard.analyze_file(src_file)
                 for m in methods.function_list:
                     if m.start_line <= int(var_line) <= m.end_line:
                         real_mname = f'{m.unqualified_name}&{m.start_line}&{m.end_line}'
-                        method_name_map[var_mname] = real_mname
+                        line_range = f'{m.start_line}_{m.end_line}'
+                        if var_mname in method_name_map.keys():
+                            method_name_map[var_mname][line_range] = real_mname
+                        else:
+                            method_name_map[var_mname] = {}
+                            method_name_map[var_mname][line_range] = real_mname
                         var_info = var_info.replace(f'|{var_mname}', f'|{real_mname}')
                         break
-            else:
-                var_info = var_info.replace(f'|{var_mname}', f'|{method_name_map.get(var_mname)}')
-            
+                        
             print(v)
             if "-" in var_str:
                 var_name = var_str.split("-")[1]
@@ -222,7 +235,7 @@ if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
     available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
-    available_bugs = [4]
+    available_bugs = [45]
     #for bugid in range(1,21):
     for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'
