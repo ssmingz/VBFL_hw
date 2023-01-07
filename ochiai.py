@@ -119,11 +119,16 @@ def cal_rank(ochiai_score_by_line, bug_src, bug_line_no):
     for loc,score in ochiai_score_by_line.items():
         for line in bug_line_no.split(':'):
             if loc.endswith(f'{bug_src}#{line}'):
-                counter = sum([1 for i in ochiai_score_by_line.values() if i == score])
+                num = sum([1 for i in ochiai_score_by_line.values() if i == score])
+                start = 0
+                for loc2,score2 in ochiai_score_by_line.items():
+                    start += 1
+                    if score2 == score:
+                        break
                 temp = 0
-                for i in range(1,counter+1):
+                for i in range(start, start+num):
                     temp += i
-                rank = 1.0 * temp / counter
+                rank = 1.0 * temp / num
                 return rank
 
 
@@ -139,6 +144,7 @@ def run(project_path, bugid):
     num_pass_test, num_fail_test, pass_test_names = compute_test_size(all_test_path)
 
     GetSliceCriterion.read_bugs_from_txt(bugs_txt_dir)
+    GetSliceCriterion.clean_all_gcov(f"{build_dest_dir}/{i}/mysql-server-source/")
     # running fail gcov
     os.chdir("/mnt/autoRun/")
     test_fail_cmd = f"python3 build.py test {i} 0 1"
@@ -190,7 +196,9 @@ def run(project_path, bugid):
     return groundtruth_rank
 
 
-available_bugs = [2,3]
+#available_bugs = [2,3]
+available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
+
 groundtruth_ranks = collections.OrderedDict()
 for i in available_bugs:
     groundtruth_ranks[i] = run(f'{build_dest_dir}/{i}', i)
