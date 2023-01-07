@@ -150,10 +150,10 @@ def parse_test(whole_file):
                     if m.start_line <= int(var_line) <= m.end_line:
                         real_mname = f'{m.unqualified_name}&{m.start_line}&{m.end_line}'
                         method_name_map[var_mname] = real_mname
-                        var_info = var_info.replace(var_mname, real_mname)
+                        var_info = var_info.replace(f'|{var_mname}', f'|{real_mname}')
                         break
             else:
-                var_info = var_info.replace(var_mname, method_name_map.get(var_mname))
+                var_info = var_info.replace(f'|{var_mname}', f'|{method_name_map.get(var_mname)}')
             
             print(v)
             if "-" in var_str:
@@ -221,8 +221,8 @@ def main():
 if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
-    #available_bugs = [2,3,4,6,7,8,9,12,14,17,20,22,23,24,25,26,28,29,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,622]
-    available_bugs = [5,10,16]
+    available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
+    available_bugs = [4]
     #for bugid in range(1,21):
     for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'

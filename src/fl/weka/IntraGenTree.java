@@ -47,7 +47,10 @@ public class IntraGenTree {
     public static void main(String[] args) {
         checkLog("/mnt/code/VBFL_hw/logs");
         int[] bids = {};
-        int[] available_bugs = { 5, 10, 16 };
+        // int[] available_bugs = {
+        // 2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62
+        // };
+        int[] available_bugs = { 4 };
         for (int i : available_bugs) {
             // for (int i = 1; i <= 43; i++) {
             if (!ArrayUtils.contains(bids, i)) {
