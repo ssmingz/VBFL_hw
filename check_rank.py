@@ -101,7 +101,7 @@ for i in available_bugs:
         mname = k.split('#')[1]
         lineNo = k.split('#')[2]
         if fname.endswith(gt_file) and mname == f'{gt_method}&{gt_m_startline}&{gt_m_endline}':
-            if lineNo in gt_lines and counter < gt_rank:
+            if lineNo in gt_lines:
                 # calculate rank
                 start = 0
                 for k2,v2 in final_score.items():
@@ -112,7 +112,9 @@ for i in available_bugs:
                 temp = 0
                 for j in range(start, start+num):
                     temp += j
-                gt_rank = 1.0 * temp / num
+                new_rank = 1.0 * temp / num
+                if new_rank < gt_rank:
+                    gt_rank = new_rank
     if counter == 0:
         print(f'bug {i} : not find')
     else:
