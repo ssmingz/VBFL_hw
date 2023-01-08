@@ -15,7 +15,7 @@ with open(groundtruth_path, 'r') as f:
 
 logBuf = ''
 available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
-available_bugs = [2,3]
+#available_bugs = [2,3]
 for i in available_bugs:
 #for i in range(1,63):
     if i not in gt_list.keys():
@@ -95,14 +95,24 @@ for i in available_bugs:
     final_score = dict(sorted(line_mapping_all_methods.items(), key=lambda x: x[1]['score_with_method'], reverse=True))        
     # rank
     counter, gt_rank = 0, 999999999
-    for k in final_score.keys():
+    for k,v in final_score.items():
         counter += 1
         fname = k.split('#')[0]
         mname = k.split('#')[1]
         lineNo = k.split('#')[2]
         if fname.endswith(gt_file) and mname == f'{gt_method}&{gt_m_startline}&{gt_m_endline}':
             if lineNo in gt_lines and counter < gt_rank:
-                gt_rank = counter
+                # calculate rank
+                start = 0
+                for k2,v2 in final_score.items():
+                    start += 1
+                    if v2 == v:
+                        break
+                num = sum([1 for j in final_score.values() if j == v])
+                temp = 0
+                for j in range(start, start+num):
+                    temp += j
+                gt_rank = 1.0 * temp / num
     if counter == 0:
         print(f'bug {i} : not find')
     else:
