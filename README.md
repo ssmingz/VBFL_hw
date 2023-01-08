@@ -6,7 +6,7 @@
 2. autoRun/copy_mysql_bug.py配置缺陷源码：修改路径groundtruth, src_root, dest_root和起始编号counter
 3. autoRun/ochiai.py收集SBFL结果：修改路径build_dest_dir, bugs_txt_dir和SCORE_BASE_ROOT
 4. autoRun/autoRun.py插桩
-5. values/collect_values.sh运行测试收集值
+5. values/collect_values.py运行测试收集值
 6. values/match_method.py匹配图的方法名：修改路径graph_root和output_file
 7. code/VBFL_hw/parse_values.py改range()把值按函数分文件夹：修改路径values_path和output_dir
 8. code/VBFL_hw/src/fl/weka/IntraGenTree.java构建树：修改路径root_dir, mid_path和graph_map_path
