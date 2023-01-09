@@ -98,7 +98,7 @@ def collect_single_gcov(test_name, project_dir, output_root, test_bin, totoal_nu
             output_path = f'{output_root}/{test_name_for_path}/'
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
-            cmd_cp_gcov = f'cp {project_dir}/build/{src_file_name}.gcov {output_path}'
+            cmd_cp_gcov = f'cp {project_dir}/build/{src_file_name}.gcov \'{output_path}\''
             os.system(cmd_cp_gcov)
 
 
