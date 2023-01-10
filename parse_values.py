@@ -228,6 +228,39 @@ def main():
                     each.write(r1.test_result + "\n")
 
 
+def mainLS(values_pathL, values_pathS):
+    r = []
+    if os.path.exists(values_pathL):
+        whole_fileL = read_values(values_pathL)
+        r.extend(parse_test(whole_fileL))
+    if os.path.exists(values_pathS):
+        whole_fileS = read_values(values_pathS)
+        r.extend(parse_test(whole_fileS))
+    with open(output_path, "w") as total:
+        for r1 in r:
+            total.write(r1.test_name + "\n")
+            for v1 in r1.value_list:
+                total.write(v1 + "\n")
+            total.write(r1.test_result + "\n")
+    with open(instr_output_path, "w") as instr:
+        for key, value in method_map.items():
+            # todo need method type and arguments
+            type = "?"
+            args = "?"
+            instr.write(value + ":" + key.split("|")[0] + "#" + type + "#" + key.split("|")[1] + "#" + args + "\n")
+            each_output_path = output_dir + value + "/std_slicing.log"
+            if not os.path.exists(output_dir + value):
+                os.mkdir(output_dir + value)
+            with open(each_output_path, "w") as each:
+                for r1 in r:
+                    each.write(r1.test_name + "\n")
+                    for v1 in r1.value_list:
+                        if v1.startswith(f'{value}#'):
+                            each.write(v1.split("#")[1] + "\n")
+                    each.write(r1.test_result + "\n")
+
+
+
 if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
@@ -237,7 +270,9 @@ if __name__ == '__main__':
     for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'
         values_path = root_dir + "values.txt"
-        if not os.path.exists(root_dir) or not os.path.exists(values_path):
+        values_pathL = root_dir + "values-large.txt"
+        values_pathS = root_dir + "values-small.txt"
+        if not os.path.exists(root_dir) or not os.path.exists(values_path) or not os.path.exists(values_pathL) or not os.path.exists(values_pathS):
             continue
         output_dir = f'/mnt/values/trees/bug_{bugid}/'
         if os.path.exists(output_dir):
@@ -246,7 +281,10 @@ if __name__ == '__main__':
             os.makedirs(output_dir)
         output_path = output_dir + "original.txt"
         instr_output_path = output_dir + "instrumented_method_id.txt"
-        main()
+        if os.path.exists(values_pathL) or os.path.exists(values_pathS):
+            mainLS(values_pathL, values_pathS)
+        else:
+            main()
         method_map.clear()
         method_name_map.clear()
     print("Finish")
