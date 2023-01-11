@@ -15,9 +15,11 @@ with open(groundtruth_path, 'r') as f:
 
 logBuf = ''
 available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
-#available_bugs = [2,3]
-for i in available_bugs:
-#for i in range(1,63):
+ignore_bugs = [3,7,9,11,14,15,16,18,19,21,22,23,24,27,28,29,32,33,34,35,36,37,38,39,40,43,44,47,49,50,52,53,54,55,56,57,58,59,60,62]
+#for i in available_bugs:
+for i in range(1,63):
+    if i in ignore_bugs:
+        continue
     if i not in gt_list.keys():
         continue
     gt_file = gt_list[i].split(',')[2]
@@ -80,21 +82,37 @@ for i in available_bugs:
             
             if fname.endswith(gt_file) and mname == f'{gt_method}&{gt_m_startline}&{gt_m_endline}':
                 flag = True
-                # rank
+                # rank in method
                 counter, gt_rank = 0, 999999999
                 binary_exp_counter = 0
-                for lineNo in line_mapping_without_args.keys():
+                num = 0
+                for lineNo,v in line_mapping_without_args.items():
                     counter += 1
                     if lineNo in gt_lines and counter < gt_rank:
-                        gt_rank = counter
+                        #gt_rank = counter
+                        start = 0
+                        for k2,v2 in line_mapping_without_args.items():
+                            start += 1
+                            if v2['reorder_score'] == v['reorder_score']:
+                                break
+                        tnum = sum([1 for j in line_mapping_without_args.values() if j['reorder_score'] == v['reorder_score']])
+                        temp = 0
+                        for j in range(start, start+tnum):
+                            temp += j
+                        new_rank = 1.0 * temp / tnum
+                        if new_rank < gt_rank:
+                            gt_rank = new_rank
+                            num = tnum
                 if counter == 0:
                     print(f'bug {i} : no tree generated for groundtruth method {mid}')
                 else:
-                    print(f'bug {i} : {gt_rank}/{counter} method {mid}')
+                    #print(f'bug {i} : {gt_rank}/{counter} method {mid}')
+                    print(f'bug {i} : {gt_rank}({num}) method {mid}')
 
     final_score = dict(sorted(line_mapping_all_methods.items(), key=lambda x: x[1]['score_with_method'], reverse=True))        
-    # rank
+    # rank in all methods
     counter, gt_rank = 0, 999999999
+    num = 0
     for k,v in final_score.items():
         counter += 1
         fname = k.split('#')[0]
@@ -106,19 +124,21 @@ for i in available_bugs:
                 start = 0
                 for k2,v2 in final_score.items():
                     start += 1
-                    if v2 == v:
+                    if v2['score_with_method'] == v['score_with_method']:
                         break
-                num = sum([1 for j in final_score.values() if j == v])
+                tnum = sum([1 for j in final_score.values() if j['score_with_method'] == v['score_with_method']])
                 temp = 0
-                for j in range(start, start+num):
+                for j in range(start, start+tnum):
                     temp += j
-                new_rank = 1.0 * temp / num
+                new_rank = 1.0 * temp / tnum
                 if new_rank < gt_rank:
                     gt_rank = new_rank
+                    num = tnum
     if counter == 0:
         print(f'bug {i} : not find')
     else:
-        print(f'bug {i} : {gt_rank}/{counter}')
+        #print(f'bug {i} : {gt_rank}/{counter}')
+        print(f'bug {i} : {gt_rank}({num})')
     if not flag:
         print(f'bug {i} : no values collected for groundtruth method {mid}')
     
