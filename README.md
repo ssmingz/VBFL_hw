@@ -28,6 +28,10 @@
    
 9. values/check_rank.py获取排名(函数内）：修改路径groundtruth_path, trees_root（8.中root_dir）, values_root和src_file
 
+10. code/VBFL_hw/find_all_covered_tests.py用于获取覆盖某文件某行的所有large/small test运行命令
+
+11. code/VBFL_hw/compare_tests.py用于跟groundtruth比较是否有新增的覆盖的测试
+
 groundtruth_path文件格式：
 
 bugid,bug_type,src_file_path,buggy_line1:buggy_line2:...,test_suite,failing_test,test_command
