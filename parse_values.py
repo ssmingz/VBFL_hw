@@ -109,6 +109,8 @@ def parse_test(whole_file):
     for t in tests[1:]:
         test_name = t.split("\n")[0].replace("]", "").strip()
         test_result = t.split(test_name)[-2].split("\n")[-1].strip()
+        if len(test_result.split('['))<2:
+            print('de')
         test_result = test_result.split("[")[1].replace("]", "").strip()
         test_result = test_result.replace("OK", "PASS").replace("FAILED", "FAIL")
         values = t.split(test_name)[1].split(test_result)[0].split("[")[0].strip()
@@ -228,8 +230,10 @@ def main():
                     each.write(r1.test_result + "\n")
 
 
-def mainLS(values_pathL, values_pathS):
+def mainLS(values_pathL, values_pathS, values_path):
     r = []
+    whole_file = read_values(values_path)
+    r.extend(parse_test(whole_file))
     if os.path.exists(values_pathL):
         whole_fileL = read_values(values_pathL)
         r.extend(parse_test(whole_fileL))
@@ -265,7 +269,7 @@ if __name__ == '__main__':
     #root_dir = sys.argv[1]
     #output_dir = sys.argv[2]
     available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
-    available_bugs=[61,1,13]
+    available_bugs=[61]
     #for bugid in range(1,21):
     for bugid in available_bugs:
         root_dir = f'/mnt/values/{bugid}/'
@@ -282,7 +286,7 @@ if __name__ == '__main__':
         output_path = output_dir + "original.txt"
         instr_output_path = output_dir + "instrumented_method_id.txt"
         if os.path.exists(values_pathL) or os.path.exists(values_pathS):
-            mainLS(values_pathL, values_pathS)
+            mainLS(values_pathL, values_pathS, values_path)
         else:
             main()
         method_map.clear()
