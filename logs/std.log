@@ -1,8 +1,15 @@
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/13/std_slicing.log
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/14/std_slicing.log
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/15/std_slicing.log
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/16/std_slicing.log
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/17/std_slicing.log
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/18/std_slicing.log
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/19/std_slicing.log
-2023-01-30 11:51:05  [ERROR] values root dir not exist : /mnt/values/trees/bug_12/20/std_slicing.log
+2023-01-30 14:06:34  [WARNING] Couldn't find graph file for method : 24:/mnt/out_put/42_llvm/mysql-server-source/sql/item_cmpfunc.cc#?#get_single_col_filtering_effect&4739&4758#?
+2023-01-30 14:06:34  [WARNING] Couldn't find graph file for method : 25:/mnt/out_put/42_llvm/mysql-server-source/sql/item_cmpfunc.cc#?#operator ( )&4272&4275#?
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/26/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/27/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/28/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/29/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/30/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/31/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/32/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/33/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/34/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/35/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/36/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/37/std_slicing.log
+2023-01-30 14:06:34  [ERROR] values root dir not exist : /mnt/values/trees/bug_42/38/std_slicing.log

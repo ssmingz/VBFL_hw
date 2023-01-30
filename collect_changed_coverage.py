@@ -327,6 +327,8 @@ def check_changed_var_in(obug):
 
 def sort_by_tree(bugids):
     bugs = read_bugs_from_txt(bugs_txt_dir)
+    totalsize = len(bugids)
+    top1, top5 = 0, 0
     for id in bugids:
         # check changed variable apperance for each statement
         varAppear = check_changed_var_in(bugs[int(id)-1])
@@ -424,13 +426,19 @@ def sort_by_tree(bugids):
             prestr = ','.join(prelist)
             #print(f'bug {id} : {gt_rank}({num}) [{prestr}]')
             print(f'bug {id} : {gt_rank}({num})')
+            if gt_rank <= 1:
+                top1 += 1
+            if gt_rank <= 5:
+                top5 += 1
 
         #print(f'{id} ok')
+    print(f'top1:{top1}/{totalsize}={1.0*top1/totalsize}')
+    print(f'top5:{top5}/{totalsize}={1.0*top5/totalsize}')
 
 
 
 if __name__ == '__main__':
     #collect_coverage()
-    avail = [i for i in range(1,63) if i not in [11,15,18,27,47,54]]
+    avail = [i for i in range(1,43) if i not in [11,15,18,27,47,54]]
     sort_by_tree(avail)  # decision tree, changed_coverage, changed variable appearance
     print('finish')
