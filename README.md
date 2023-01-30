@@ -2,6 +2,11 @@
 
 #### 使用说明
 
+运行完autoRun-tree.py再运行/mnt/code/VBFL_hw/collect_changed_coverage.py得到最终结果
+运行/mnt/code/VBFL_hw/ochiai.py得到ochiai.txt,需要有/mnt/out_put/i/文件夹（非i_llvm
+
+#### 文件说明
+
 1. autoRun/collect_bug_info.py配置缺陷信息：修改文件中的路径groundtruth, test_commands和起始编号counter
 
 2. autoRun/copy_mysql_bug.py配置缺陷源码：修改路径groundtruth, src_root, dest_root和起始编号counter

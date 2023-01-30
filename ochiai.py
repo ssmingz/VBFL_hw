@@ -2,6 +2,7 @@ import math
 import os
 import GetSliceCriterion
 import collections
+import sys
 
 # configuration settings
 FAIL_GCOV_PATH = '/build/gcov'
@@ -197,10 +198,11 @@ def run(project_path, bugid):
 
 
 #available_bugs = [2,3]
-available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
+#available_bugs = [2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62]
 
-groundtruth_ranks = collections.OrderedDict()
-for i in available_bugs:
-    groundtruth_ranks[i] = run(f'{build_dest_dir}/{i}', i)
-output_file(f'{SCORE_BASE_ROOT}/ochiai_ranks.txt', groundtruth_ranks)
+#groundtruth_ranks = collections.OrderedDict()
+#for i in available_bugs:
+i = int(sys.argv[1])
+groundtruth_ranks = run(f'{build_dest_dir}/{i}', i)
+#output_file(f'{SCORE_BASE_ROOT}/ochiai_ranks.txt', groundtruth_ranks)
 print('finish')

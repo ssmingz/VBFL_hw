@@ -1,4 +1,5 @@
 import os
+import sys
 
 gcov_root=f'/mnt/AllTestGcov'
 bugs_txt=f'/mnt/autoRun/bugs.txt'
@@ -63,8 +64,8 @@ def get_all_covered_tests(src_file_name, covered_lines, large_test_list, small_t
     # find all .gcov
     cmd_find_gcov = f"find {gcov_root}/ -name '*{src_file_name}.gcov'"
     all_gcovs = os.popen(cmd_find_gcov).read().split('\n')
-    print(cmd_find_gcov)
-    print(f'all .gcov : {len(all_gcovs)}')
+    #print(cmd_find_gcov)
+    #print(f'all .gcov : {len(all_gcovs)}')
     covered_large_tests, covered_small_tests = set(), set()
     for g in all_gcovs:
         if g == '':
@@ -81,10 +82,10 @@ def get_all_covered_tests(src_file_name, covered_lines, large_test_list, small_t
                         covered_large_tests.add(test_name)
                     elif test_name in small_test_list and test_name not in large_test_list:
                         covered_small_tests.add(test_name)
-                    elif test_name not in small_test_list and test_name not in large_test_list:
-                        print(f'could not find test-bin for {test_name}')
-                    else:
-                        print(f'both in large and small test for {test_name}')
+                    #elif test_name not in small_test_list and test_name not in large_test_list:
+                    #    print(f'could not find test-bin for {test_name}')
+                    #else:
+                    #    print(f'both in large and small test for {test_name}')
     return covered_large_tests, covered_small_tests
 
 
@@ -104,21 +105,24 @@ def print_command(covered_tests, test_bin):
     return cmd
 
 
-def run_for_autoRun(large_test_list, small_test_list):
+def run_for_autoRun(large_test_list, small_test_list, id):
     bugs = read_bugs_from_txt(bugs_txt)
     for bug in bugs:
+        if bug.bug_id != str(id):
+            continue
         covered_large_tests, covered_small_tests = get_all_covered_tests(bug.bug_src.split('/')[-1], bug.bug_line_no.split(':'), large_test_list, small_test_list)
         cmd1 = print_command(covered_large_tests, 'large')
         cmd2 = print_command(covered_small_tests, 'small')
         if cmd1 != None:
-            print(f'bug {bug.bug_id} : timeout 20m /mnt/out_put/{bug.bug_id}_llvm/mysql-server-source/{cmd1} | tee /mnt/values/{bug.bug_id}/values-large.txt')
+            print(f'timeout 15m /mnt/out_put/{bug.bug_id}_llvm/mysql-server-source/{cmd1} | tee /mnt/values/{bug.bug_id}/values-large.txt')
         if cmd2 != None:
-            print(f'bug {bug.bug_id} : timeout 20m /mnt/out_put/{bug.bug_id}_llvm/mysql-server-source/{cmd2} | tee /mnt/values/{bug.bug_id}/values-small.txt')
-        if cmd1 == None and cmd2 == None:
-            print(f'bug {bug.bug_id} : No test covered ')
+            print(f'timeout 15m /mnt/out_put/{bug.bug_id}_llvm/mysql-server-source/{cmd2} | tee /mnt/values/{bug.bug_id}/values-small.txt')
+        #if cmd1 == None and cmd2 == None:
+        #    print(f'bug {bug.bug_id} : No test covered ')
 
 
 if __name__ == '__main__':
+    id = sys.argv[1]
     large_test_list, small_test_list = read_test_from_txt()
-    run_for_autoRun(large_test_list, small_test_list)
-    print('finish')
+    run_for_autoRun(large_test_list, small_test_list, id)
+    #print('finish')

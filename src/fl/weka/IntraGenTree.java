@@ -50,59 +50,60 @@ public class IntraGenTree {
         // int[] available_bugs = {
         // 2,3,4,5,6,7,8,9,10,12,14,16,17,20,22,23,24,25,26,28,29,30,31,35,36,37,38,39,40,41,42,44,45,46,48,49,50,51,52,53,58,59,60,61,62
         // };
-        int[] available_bugs = { 4, 8, 10, 25, 30, 31, 41, 42, 46, 61 };
-        for (int i : available_bugs) {
-            // for (int i = 1; i <= 43; i++) {
-            if (!ArrayUtils.contains(bids, i)) {
-                String root_dir = "/mnt/values/trees/bug_" + i + "/";
-                String mid_path = "/mnt/values/trees/bug_" + i + "/instrumented_method_id.txt";
-                String graph_map_path = "/mnt/values/" + i + "/graph_map.txt";
-                DEPENDENCY_FACTOR = Double.parseDouble("0.8");
-                int methodCount = -1;
-                File file = new File(mid_path);
-                try {
-                    FileReader fr = new FileReader(file);
-                    BufferedReader br = new BufferedReader(fr);
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        if (!line.trim().equals("")) {
-                            methodCount++;
-                            MID = line.split(":", 2)[1];
-                            CLAZZ = MID.split("#")[0];
-                            METHOD = MID.split("#")[2];
-                            String valuesPath = root_dir + methodCount + "/std_slicing.log";
-                            String output_path = root_dir + methodCount;
+        // int[] available_bugs = { 4, 8, 10, 25, 30, 31, 41, 42, 46, 61 };
+        int i = Integer.parseInt(args[0]);
+        // for (int i : available_bugs) {
+        // for (int i = 1; i <= 43; i++) {
+        if (!ArrayUtils.contains(bids, i)) {
+            String root_dir = "/mnt/values/trees/bug_" + i + "/";
+            String mid_path = "/mnt/values/trees/bug_" + i + "/instrumented_method_id.txt";
+            String graph_map_path = "/mnt/values/" + i + "/graph_map.txt";
+            DEPENDENCY_FACTOR = Double.parseDouble("0.8");
+            int methodCount = -1;
+            File file = new File(mid_path);
+            try {
+                FileReader fr = new FileReader(file);
+                BufferedReader br = new BufferedReader(fr);
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (!line.trim().equals("")) {
+                        methodCount++;
+                        MID = line.split(":", 2)[1];
+                        CLAZZ = MID.split("#")[0];
+                        METHOD = MID.split("#")[2];
+                        String valuesPath = root_dir + methodCount + "/std_slicing.log";
+                        String output_path = root_dir + methodCount;
 
-                            File valuesFile = new File(valuesPath);
-                            if (!valuesFile.exists()) {
-                                JavaLogger.debug(String.format("[ERROR] values root dir not exist : %s", valuesPath));
-                                continue;
-                            }
-
-                            DEPENDENCY_FILE_PATH = parse_graph_path(graph_map_path);
-                            if (DEPENDENCY_FILE_PATH == null) {
-                                JavaLogger.debug("[WARNING] Couldn't find graph file for method : " + line);
-                                // continue;
-                            }
-
-                            File treesDir = new File(output_path);
-                            if (!treesDir.exists()) {
-                                treesDir.mkdirs();
-                            }
-
-                            parseClazzMethod(mid_path);
-
-                            log2tree(valuesPath, output_path);
-                            System.err.println("[OK] Generate trees successfully for method : " + line);
+                        File valuesFile = new File(valuesPath);
+                        if (!valuesFile.exists()) {
+                            JavaLogger.debug(String.format("[ERROR] values root dir not exist : %s", valuesPath));
+                            continue;
                         }
+
+                        DEPENDENCY_FILE_PATH = parse_graph_path(graph_map_path);
+                        if (DEPENDENCY_FILE_PATH == null) {
+                            JavaLogger.debug("[WARNING] Couldn't find graph file for method : " + line);
+                            // continue;
+                        }
+
+                        File treesDir = new File(output_path);
+                        if (!treesDir.exists()) {
+                            treesDir.mkdirs();
+                        }
+
+                        parseClazzMethod(mid_path);
+
+                        log2tree(valuesPath, output_path);
+                        System.err.println("[OK] Generate trees successfully for method : " + line);
                     }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
+        // }
     }
 
     private static void checkLog(String path) {
