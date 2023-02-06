@@ -136,7 +136,7 @@ def cal_rank(ochiai_score_by_line, bug_src, bug_line_no):
 def run(project_path, bugid):
     # run all tests
     os.chdir("/mnt/autoRun/")
-    test_all_cmd = f"python3 build.py test {bugid} 0 0"
+    test_all_cmd = f"python3 build.py test {bugid} 0 0 {build_dest_dir}/{i}_llvm/mysql-server-source/"
     print(test_all_cmd)
     os.system(test_all_cmd)
     # all-test result
@@ -145,32 +145,32 @@ def run(project_path, bugid):
     num_pass_test, num_fail_test, pass_test_names = compute_test_size(all_test_path)
 
     GetSliceCriterion.read_bugs_from_txt(bugs_txt_dir)
-    GetSliceCriterion.clean_all_gcov(f"{build_dest_dir}/{i}/mysql-server-source/")
+    GetSliceCriterion.clean_all_gcov(f"{build_dest_dir}/{i}_llvm/mysql-server-source/")
     # running fail gcov
     os.chdir("/mnt/autoRun/")
-    test_fail_cmd = f"python3 build.py test {i} 0 1"
+    test_fail_cmd = f"python3 build.py test {i} 0 1 {build_dest_dir}/{i}_llvm/mysql-server-source/"
     print(test_fail_cmd)
     os.system(test_fail_cmd)
     # get gcov files and copy them to the copy them to the {i}/mysql-server-source/gcov dir
-    GetSliceCriterion.get_gcov(f"{i}", f"{build_dest_dir}/{i}/mysql-server-source/", 0)
-    FAIL_GCOV_PATH = f'{build_dest_dir}/{i}/mysql-server-source/gcov'
+    GetSliceCriterion.get_gcov(f"{i}", f"{build_dest_dir}/{i}_llvm/mysql-server-source/", 0)
+    FAIL_GCOV_PATH = f'{build_dest_dir}/{i}_llvm/mysql-server-source/gcov'
     # read .gcov files to record coverage info
     fail_gcov_root = f'{FAIL_GCOV_PATH}'
     fail_gcov_map = record_cov_info(project_path, fail_gcov_root)
     print(f'-------------- collect failing tests coverage info --------------')
-    GetSliceCriterion.clean_all_gcov(f"{build_dest_dir}/{i}/mysql-server-source/")
+    GetSliceCriterion.clean_all_gcov(f"{build_dest_dir}/{i}_llvm/mysql-server-source/")
 
     # running each pass gcov
     test_bin = GetSliceCriterion.bugs[i-1].test_bin
     for pt in pass_test_names:
         bug_test_filter = f"--gtest_filter={pt}"
-        ptest_cmd = f"{build_dest_dir}/{i}/mysql-server-source/build/bin/{test_bin} {bug_test_filter}"
+        ptest_cmd = f"{build_dest_dir}/{i}_llvm/mysql-server-source/build/bin/{test_bin} {bug_test_filter}"
         print(ptest_cmd)
         os.system(ptest_cmd)
         # get gcov files and copy them to the copy them to the {i}/mysql-server-source/pass_gcov/pt dir
-        GetSliceCriterion.get_pass_gcov(f"{i}", f"{build_dest_dir}/{i}/mysql-server-source/", pt)
-        PASS_GCOV_PATH.append(f'{build_dest_dir}/{i}/mysql-server-source/pass_gcov/{pt}')
-        GetSliceCriterion.clean_all_gcov(f"{build_dest_dir}/{i}/mysql-server-source/")
+        GetSliceCriterion.get_pass_gcov(f"{i}", f"{build_dest_dir}/{i}_llvm/mysql-server-source/", pt)
+        PASS_GCOV_PATH.append(f'{build_dest_dir}/{i}_llvm/mysql-server-source/pass_gcov/{pt}')
+        GetSliceCriterion.clean_all_gcov(f"{build_dest_dir}/{i}_llvm/mysql-server-source/")
     # read .gcov files to record coverage info
     pass_gcov_map = {}
     for pgcov in PASS_GCOV_PATH:
@@ -203,6 +203,6 @@ def run(project_path, bugid):
 #groundtruth_ranks = collections.OrderedDict()
 #for i in available_bugs:
 i = int(sys.argv[1])
-groundtruth_ranks = run(f'{build_dest_dir}/{i}', i)
+groundtruth_ranks = run(f'{build_dest_dir}/{i}_llvm', i)
 #output_file(f'{SCORE_BASE_ROOT}/ochiai_ranks.txt', groundtruth_ranks)
 print('finish')

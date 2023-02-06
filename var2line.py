@@ -24,6 +24,12 @@ class Var2Line:
                         inst['ori_variable'] = l.split(' ')[1]
                         inst['value_type'] = self.find_inst_in_values(inst['ori_variable']).split('/')[0]
                         inst['path'] = self.find_inst_in_values(inst['ori_variable']).split(':')[0]
+                        # check if '}'
+                        filepath = inst['path'][inst['path'].find('/'):inst['path'].find('|')]
+                        line_content = os.popen(f'sed -n {lineNo}p {filepath}').read()
+                        while line_content.replace('}','').strip() == '':
+                            lineNo -= 1
+                            line_content = = os.popen(f'sed -n {lineNo}p {filepath}').read()
                         line_list[lineNo] = inst
                 if l.strip() == 'Reorder:':
                     beginning = True

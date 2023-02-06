@@ -439,6 +439,6 @@ def sort_by_tree(bugids):
 
 if __name__ == '__main__':
     #collect_coverage()
-    avail = [i for i in range(1,43) if i not in [11,15,18,27,47,54]]
+    avail = [i for i in range(1,63) if i not in [11,15,18,27,47,54]]
     sort_by_tree(avail)  # decision tree, changed_coverage, changed variable appearance
     print('finish')
