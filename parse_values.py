@@ -233,8 +233,9 @@ def main():
 
 def mainLS(values_pathL, values_pathS, values_path):
     r = []
-    whole_file = read_values(values_path)
-    r.extend(parse_test(whole_file))
+    if os.path.exists(values_path):
+        whole_file = read_values(values_path)
+        r.extend(parse_test(whole_file))
     if os.path.exists(values_pathL):
         whole_fileL = read_values(values_pathL)
         r.extend(parse_test(whole_fileL))

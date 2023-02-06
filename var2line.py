@@ -29,7 +29,7 @@ class Var2Line:
                         line_content = os.popen(f'sed -n {lineNo}p {filepath}').read()
                         while line_content.replace('}','').strip() == '':
                             lineNo -= 1
-                            line_content = = os.popen(f'sed -n {lineNo}p {filepath}').read()
+                            line_content = os.popen(f'sed -n {lineNo}p {filepath}').read()
                         line_list[lineNo] = inst
                 if l.strip() == 'Reorder:':
                     beginning = True
