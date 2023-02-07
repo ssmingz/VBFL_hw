@@ -28,7 +28,7 @@ class Var2Line:
                         filepath = inst['path'][inst['path'].find('/'):inst['path'].find('|')]
                         line_content = os.popen(f'sed -n {lineNo}p {filepath}').read()
                         while line_content.replace('}','').strip() == '':
-                            lineNo -= 1
+                            lineNo = int(lineNo) - 1
                             line_content = os.popen(f'sed -n {lineNo}p {filepath}').read()
                         line_list[lineNo] = inst
                 if l.strip() == 'Reorder:':
@@ -38,12 +38,13 @@ class Var2Line:
     def find_inst_in_values(self, attr_name):
         lineNo, colNo = attr_name.split('-')[-1].split('/')[0], attr_name.split('-')[-1].split('/')[1]
         loc = f':{lineNo}|{colNo}'
-        with open(self.value_file, 'r') as f:
-            for l in f:
-                if loc in l:
-                    for e in l.split():
-                        if loc in e:
-                            return e
+        for vf in self.value_file:
+            with open(vf, 'r') as f:
+                for l in f:
+                    if loc in l:
+                        for e in l.split():
+                            if loc in e:
+                                return e
         return ''
 
     def map_args(self, line_mapping):
@@ -70,6 +71,8 @@ class Var2Line:
 
     def aggre_methods(self, line_mapping, sbfl_path, fname, mname):
         line_mapping_with_methods = collections.OrderedDict()
+        if '&' not in mname:
+            return line_mapping_with_methods
         start_line = int(mname.split('&')[-2])
         end_line = int(mname.split('&')[-1])
         for line,info in line_mapping.items():

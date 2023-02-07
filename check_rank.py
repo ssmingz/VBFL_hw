@@ -31,8 +31,14 @@ gt_method = ''
 gt_m_startline, gt_m_endline = 0, 0
 src_file = f'/mnt/out_put/{i}_llvm/mysql-server-source/{gt_file}'
 
-value_file = f'{values_root}/{i}/values.txt'
-if not os.path.exists(value_file):
+value_file = []
+if os.path.exists(f'{values_root}/{i}/values.txt'):
+    value_file.append(f'{values_root}/{i}/values.txt')
+if os.path.exists(f'{values_root}/{i}/values-large.txt'):
+    value_file.append(f'{values_root}/{i}/values-large.txt')
+if os.path.exists(f'{values_root}/{i}/values-small.txt'):
+    value_file.append(f'{values_root}/{i}/values-small.txt')
+if len(value_file) == 0:
     print(f'bug {i} : no value file for bug {i}')
     exit
 graph_map = f'{values_root}/{i}/graph_map.txt'
@@ -147,5 +153,5 @@ else:
     #print(f'bug {i} : {gt_rank}/{counter}')
     print(f'bug {i} : {gt_rank}({num})')
 if not flag:
-    print(f'bug {i} : no values collected for groundtruth method {mid}')
+    print(f'bug {i} : not find groundtruth method')
     

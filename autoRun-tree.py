@@ -4,7 +4,7 @@ import traceback
 # 运行完autoRun-tree.py再运行/mnt/code/VBFL_hw/collect_changed_coverage.py得到最终结果
 # 运行/mnt/code/VBFL_hw/ochiai.py得到ochiai.txt,需要有/mnt/out_put/i/文件夹（非i_llvm
 
-avail = [i for i in range(63, 64)]
+avail = [i for i in range(63, 111)]
 for i in avail:
     try:
         get_test_cmd = f'python3 find_all_covered_tests.py {i}'
