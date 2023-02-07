@@ -133,14 +133,11 @@ def compute_test_size(all_test_path):
 
 def run_single_bug(id, project_dir, src_file):
     testcmds = []
-    with open(testcommands, 'r') as f:
-        for l in f:
-            if l.startswith(f'bug {id} :'):
-                testbin = l.split()[3]
-                tests = l.split()[4]
-                tests = tests[tests.find('=')+1:].strip()
-                for t in tests.split(':'):
-                    testcmds.append(f'{testbin} --gtest_filter={t}')
+    get_test_cmd = f'python3 find_all_covered_tests.py {id}'
+    test_cmds = os.popen(get_test_cmd).read()
+    for test_cmd in test_cmds.split('\n'):
+        if test_cmd.startswith('timeout '):
+            testcmds.append(test_cmd.split('|')[0].strip())
     for tcmd in testcmds:
         test_name = tcmd.split('=')[-1]
         # clean all .gcda and .gcov
@@ -190,14 +187,14 @@ def run_single_bug(id, project_dir, src_file):
                 os.system(cmd_cp_result)
 
 
-def collect_coverage():
+def collect_coverage(tar):
     ignore_bugs = [11,15,18,27,47,54]
     bugs = read_bugs_from_txt(bugs_txt_dir)
     for bug in bugs:
         id = bug.bug_id
-        if int(id) not in [58,59,60,61,62]:
+        if int(id) not in tar:
             continue
-        project_dir = f'/mnt/out_put/{id}/mysql-server-source'
+        project_dir = f'/mnt/out_put/{id}_llvm/mysql-server-source'
         buggy_file = bug.bug_src.split('/')[-1]
         run_single_bug(id, project_dir, buggy_file)
         print(f'{id} : ok')
@@ -438,7 +435,7 @@ def sort_by_tree(bugids):
 
 
 if __name__ == '__main__':
-    #collect_coverage()
-    avail = [i for i in range(1,63) if i not in [11,15,18,27,47,54]]
+    avail = [i for i in range(63, 64)]
+    collect_coverage(avail)
     sort_by_tree(avail)  # decision tree, changed_coverage, changed variable appearance
     print('finish')
