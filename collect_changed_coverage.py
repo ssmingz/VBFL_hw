@@ -133,11 +133,14 @@ def compute_test_size(all_test_path):
 
 def run_single_bug(id, project_dir, src_file):
     testcmds = []
-    get_test_cmd = f'python3 find_all_covered_tests.py {id}'
+    get_test_cmd = f'python3 /mnt/code/VBFL_hw/find_all_covered_tests.py {id}'
     test_cmds = os.popen(get_test_cmd).read()
     for test_cmd in test_cmds.split('\n'):
         if test_cmd.startswith('timeout '):
-            testcmds.append(test_cmd.split('|')[0].strip())
+            tts = test_cmd.split('|')[0].strip().split('=')[-1]
+            prefix = test_cmd.split('|')[0].strip().split('=')[0]
+            for tt in tts.split(':'):
+                testcmds.append(f'{prefix}={tt}')
     for tcmd in testcmds:
         test_name = tcmd.split('=')[-1]
         # clean all .gcda and .gcov
@@ -435,7 +438,7 @@ def sort_by_tree(bugids):
 
 
 if __name__ == '__main__':
-    avail = [i for i in range(63, 64)]
+    avail = [64]
     collect_coverage(avail)
     sort_by_tree(avail)  # decision tree, changed_coverage, changed variable appearance
     print('finish')
