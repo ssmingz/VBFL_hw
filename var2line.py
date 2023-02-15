@@ -54,7 +54,7 @@ class Var2Line:
             if inst.startswith('MethodArgument#'):
                 # 用候选列表中第一次使用参数行替换原始行
                 arg_name = inst.split('-')[-1]
-                new_lineNo2 = 99999999999
+                new_lineNo2 = int(lineNo) # 99999999999
                 for lineNo2 in line_mapping.keys():
                     if lineNo2 != lineNo:
                         src_code = os.popen(f'sed -n {lineNo2}p {self.src_file}').read()

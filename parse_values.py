@@ -6,7 +6,7 @@ import object_type
 import re
 import lizard
 
-type_list = ["Condition", "MethodArgument", "Variable", "Binary_Expression", "Return_Expression"]
+type_list = ["Condition/", "MethodArgument#", "Variable/", "Binary_Expression/", "Return_Expression/"]
 attr_type_list = ["Value", "isNull", "TYPE", "length"]  # see comments in get_func()
 attr_postfix = "{PRED}"
 method_map = {}
@@ -84,6 +84,8 @@ def split_str_with_relst(values: str, regex_list: list) -> list:
     prefix = ""
     # concatenate values with its type
     for value_split in values_split:
+        if value_split == '  ':
+            continue
         if value_split in regex_list:
             prefix = value_split
         else:
@@ -92,10 +94,10 @@ def split_str_with_relst(values: str, regex_list: list) -> list:
 
 
 def read_attributes(attrs: str) -> list:
-    attrs_lst = split_str_with_relst(attrs, ["  " + x + ":  " for x in attr_type_list])
+    attrs_lst = split_str_with_relst(attrs, [x + ":  " for x in attr_type_list])
     res_lst = []
     for attr in attrs_lst:
-        flag = [type for type in attr_type_list if attr.startswith("  " + type + ":  ")]
+        flag = [type for type in attr_type_list if attr.startswith(type + ":  ")]
         if not flag or len(flag) != 1:
             continue
         res_lst.extend(diff_pattern_func.get(flag[0])(attr))
@@ -109,12 +111,14 @@ def parse_test(whole_file):
     for t in tests[1:]:
         test_name = t.split("\n")[0].replace("]", "").strip()
         test_result = t.split(test_name)[-2].split("\n")[-1].strip()
+        if len(t.split(test_name)) < 3:
+            print("test " + test_name + " didn't complete! Use its values as FAILED TEST's.")
+            test_result = '[  FAILED  ]'
         if len(test_result.split('['))<2:
-            test_result = 'FAIL'
-        else:
-            test_result = test_result.split("[")[1].replace("]", "").strip()
-            test_result = test_result.replace("OK", "PASS").replace("FAILED", "FAIL")
-        values = t.split(test_name)[1].split(test_result)[0].split("[")[0].strip()
+            test_result = '[  FAILED  ]'
+        values = t.split(test_name)[1].split(test_result)[0].strip()
+        test_result = test_result.split("[")[1].replace("]", "").strip()
+        test_result = test_result.replace("OK", "PASS").replace("FAILED", "FAIL")
         value_list = []
 
         # [poi]
@@ -128,19 +132,22 @@ def parse_test(whole_file):
             if v == "":
                 continue
 
-            if '/' not in v:
-                continue
-            var_type = v.split("/")[0]
-            type_is_right = [ty for ty in type_list if ty in var_type]
-            if not type_is_right:
-                continue
+            var_type = v.split("/")[0] # sometimes might got none srcpath, thus var_type cannot be splited by '/'
+            if len(v.split("/")) < 2 or ':' in var_type:
+                var_type = [ty for ty in type_list if var_type.startswith(ty)][0]
+            else:
+                type_is_right = [ty for ty in type_list if var_type in ty]
+                if not type_is_right:
+                    continue
 
             var_key = split_str_with_relst(v, ["  Value:"])
             if len(var_key) != 2:
                 continue
 
-            var_str = var_key[0].split(var_type)[1].split(":")[-1].strip()
-            var_info = var_key[0].split(var_type)[1][:var_key[0].split(var_type)[1].find(var_str)-1].strip()
+            var_info = var_key[0].split(type_is_right[0])[1].split(":")[0].strip()
+            var_str = var_key[0].split(type_is_right[0])[1].split(":")[1].strip()
+            # var_str = var_key[0].split(var_type)[1].split(":")[-1].strip()
+            # var_info = var_key[0].split(var_type)[1][:var_key[0].split(var_type)[1].find(var_str)-1].strip()
             
             # get real method name
             var_mname = var_info.split('|')[-1]
@@ -169,8 +176,9 @@ def parse_test(whole_file):
                         break
                         
             print(v)
-            if "-" in var_str:
-                var_name = var_str.split("-")[1]
+            var_name_split = var_str.split(var_line + "|" + var_col)
+            if '' == var_name_split[0] and len(var_name_split) == 2:
+                var_name = var_name_split[1][1:]
             else:
                 var_name = "EXP"
             # value = v.split(var_type)[1].split(" Value:")[1]
@@ -218,7 +226,14 @@ def main():
             # todo need method type and arguments
             type = "?"
             args = "?"
-            instr.write(value + ":" + key.split("|")[0] + "#" + type + "#" + key.split("|")[1] + "#" + args + "\n")
+            src_mth = key.split("|")
+            if len(src_mth) < 2:
+                key_src_path = ""
+                key_method_name = src_mth[0]
+            else:
+                key_src_path = src_mth[0]
+                key_method_name = src_mth[1]
+            instr.write(value + ":" + key_src_path + "#" + type + "#" + key_method_name + "#" + args + "\n")
             each_output_path = output_dir + value + "/std_slicing.log"
             if not os.path.exists(output_dir + value):
                 os.mkdir(output_dir + value)
@@ -253,7 +268,14 @@ def mainLS(values_pathL, values_pathS, values_path):
             # todo need method type and arguments
             type = "?"
             args = "?"
-            instr.write(value + ":" + key.split("|")[0] + "#" + type + "#" + key.split("|")[1] + "#" + args + "\n")
+            src_mth = key.split("|")
+            if len(src_mth) < 2:
+                key_src_path = ""
+                key_method_name = src_mth[0]
+            else:
+                key_src_path = src_mth[0]
+                key_method_name = src_mth[1]
+            instr.write(value + ":" + key_src_path + "#" + type + "#" + key_method_name + "#" + args + "\n")
             each_output_path = output_dir + value + "/std_slicing.log"
             if not os.path.exists(output_dir + value):
                 os.mkdir(output_dir + value)

@@ -4,7 +4,7 @@ import traceback
 # 运行完autoRun-tree.py再运行/mnt/code/VBFL_hw/collect_changed_coverage.py得到最终结果
 # 运行/mnt/code/VBFL_hw/ochiai.py得到ochiai.txt,需要有/mnt/out_put/i/文件夹（非i_llvm
 
-avail = [i for i in range(63, 111)]
+avail = [i for i in range(111, 195)]
 for i in avail:
     try:
         get_test_cmd = f'python3 find_all_covered_tests.py {i}'
@@ -13,7 +13,9 @@ for i in avail:
             if not test_cmd.startswith('timeout '):
                 continue
             # run tests and collect values
+            print(test_cmd)
             os.system(test_cmd)
+            
 
             # match graph file and method
             match_cmd = f'python3 match_method.py {i}'

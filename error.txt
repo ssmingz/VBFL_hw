@@ -1,6 +1,6 @@
 Traceback (most recent call last):
-  File "autoRun-tree.py", line 20, in <module>
-    match_out = os.popen(match_cmd).read()
+  File "autoRun-tree.py", line 11, in <module>
+    test_cmds = os.popen(get_test_cmd).read()
 KeyboardInterrupt
 
-63
+110

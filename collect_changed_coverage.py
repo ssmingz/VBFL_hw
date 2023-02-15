@@ -250,7 +250,7 @@ def norm_in_method(ori, src_path):
                 k = f'{method.start_line}_{method.end_line}'
                 if k not in order_by_methods.keys():
                     order_by_methods[k] = collections.OrderedDict()
-                order_by_methods[k][lineNo] = int(score)
+                order_by_methods[k][lineNo] = float(score)
                 break
     final_dict = dict()
     for m,lines in order_by_methods.items():
@@ -264,16 +264,17 @@ def norm_in_method(ori, src_path):
     return final_dict
 
 
-def load_decision_tree_score(score_path):
+def load_decision_tree_score(score_path, target):
     treeScore = collections.OrderedDict()
     if os.path.exists(score_path):
         with open(score_path, 'r') as f:
             for l in f:
                 # /mnt/out_put/2_llvm/mysql-server-source/sql/range_optimizer/tree.cc#key_or&1054&1648#1423:4.16227766016838
-                cut = l.strip().split('#')[-1]
-                lineNo = cut.split(':')[0]
-                score = float(cut.split(':')[-1])
-                treeScore[lineNo] = score
+                if f'{target}#' in l:
+                    cut = l.strip().split('#')[-1]
+                    lineNo = cut.split(':')[0]
+                    score = float(cut.split(':')[-1])
+                    treeScore[lineNo] = score
     if len(treeScore) >0:
         newlist = Min_Max(list(treeScore.values()))
         index = 0
@@ -287,7 +288,7 @@ def split_for_var(vlist:list):
     result = set()
     for v in vlist:  # no blank space in v
         flag = False
-        for r in [',', '++', '--', '+','-','*','/','=','+=','-=','*=','/=','==','!=','&&','||','&','|','(',')']:
+        for r in [',', '++', '--', '+','-','*','/','=','+=','-=','*=','/=','==','!=','&&','||','&','|','(',')',';']:
             if r in v:
                 flag = True
                 result.update(split_for_var(v.split(r)))
@@ -333,7 +334,7 @@ def sort_by_tree(bugids):
         # check changed variable apperance for each statement
         varAppear = check_changed_var_in(bugs[int(id)-1])
         # load decision tree score
-        treeScore = load_decision_tree_score(f'/mnt/values/trees/bug_{id}/line_rank.txt')
+        treeScore = load_decision_tree_score(f'/mnt/values/trees/bug_{id}/line_rank.txt',bugs[int(id)-1].bug_src)
         root = f'/mnt/AllTestGcov_BugVersion/{id}'
         bugcovByLine = dict() 
         for t in os.listdir(root):
@@ -365,11 +366,45 @@ def sort_by_tree(bugids):
                         else:
                             bugcov = 0
                         diff = abs(precovByLine[lineNo] - bugcov)
+                        if bugcov == 0:
+                            continue
                         if lineNo in bugcovByLine:
                             bugcovByLine[lineNo].append(diff)
                         else:
                             bugcovByLine[lineNo] = [diff]
         totalByLine = {lineNo:sum([j for j in cov]) for lineNo,cov in bugcovByLine.items()}
+
+        def get_start_end_line(line_to_get):
+            methods = lizard.analyze_file(f'/mnt/autoRun/mysql_bug/{id}/{bug_src}')
+            for method in methods.function_list:
+                if method.start_line == method.end_line:
+                    continue
+                if method.start_line <= line_to_get <= method.end_line:
+                    return (method.start_line, method.end_line)
+            return (0, 0)
+        start_end_dict = dict()
+        for bugLine in bugcovByLine:
+            start_end_dict[bugLine] = get_start_end_line(bugLine)
+        def getAllBelowCovDiff(currentLine, totalLines):
+            result = []
+            if currentLine in start_end_dict:
+                start_end = start_end_dict[currentLine]
+                start_line = start_end[0]
+                end_line = start_end[1]
+            else:
+                start_line = 0
+                end_line = 0
+            if start_line != 0:
+                result =[cov for lineNo,cov in totalLines.items() if lineNo > currentLine and lineNo <= end_line]
+            else:
+                return -1
+            # print("line:" + str(currentLine))
+            # print("cov:" + str(totalByLine[currentLine]))
+            # print("sum:" + str(sum(result)))
+            return sum(result) if sum(result) != 0 else -1
+
+        totalByLine = {lineNo:cov / getAllBelowCovDiff(lineNo, totalByLine) for lineNo,cov in totalByLine.items()}
+        totalByLine = {lineNo:0 if cov < 0 else cov for lineNo,cov in totalByLine.items()}
         # normalization inside method
         totalByLine = norm_in_method(totalByLine, f'/mnt/autoRun/mysql_bug/{id}/{bug_src}')
         totalByLine_cov = dict(sorted(totalByLine.items(), key=lambda x: x[1], reverse=True))  
@@ -438,7 +473,8 @@ def sort_by_tree(bugids):
 
 
 if __name__ == '__main__':
-    avail = [64]
-    collect_coverage(avail)
+    avail = [i for i in range(112, 195) if i not in[11, 15, 18, 27, 47, 54, 70, 84]]
+    #avail=[70]
+    # collect_coverage(avail)
     sort_by_tree(avail)  # decision tree, changed_coverage, changed variable appearance
     print('finish')
