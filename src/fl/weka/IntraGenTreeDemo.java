@@ -39,9 +39,9 @@ public class IntraGenTreeDemo {
     private static String DEPENDENCY_FILE_PATH = null;
 
     public static void main(String[] args) {
-        String root_dir = "/mnt/values/trees/bug_999/"; //args[1];
-        String mid_path = "/mnt/values/trees/bug_999/instrumented_method_id.txt"; //args[2];
-        String DEPENDENCY_FILE_PATH = "/mnt/values/1.txt"; //args[3];
+        String root_dir = "/mnt/values/trees/bug_999/"; //args[0];
+        String mid_path = "/mnt/values/trees/bug_999/instrumented_method_id.txt"; //args[1];
+        String DEPENDENCY_FILE_PATH = "/mnt/values/1.txt"; //args[2];
         DEPENDENCY_FACTOR = Double.parseDouble("0.8");
         int methodCount = -1;
         File file = new File(mid_path);
