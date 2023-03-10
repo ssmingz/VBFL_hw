@@ -533,27 +533,33 @@ public class IntraGenTree {
             String line = pos.split("/")[0];
             String col = pos.split("/")[1];
             String iden_pdg = "";
-            if (pos.split("/").length == 2) {
-                // iden_pdg = "Variable#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "-"
-                // + iden;
-                for (String k : scoreByPDG.keySet()) {
-                    if (k.startsWith("Variable#" + CLAZZ) && k.contains(METHOD) && k.contains(line + "|" + col)) {
-                        iden_pdg = k;
-                        break;
-                    }
-                }
-            } else if (pos.split("/").length == 3) {
-                String len = pos.split("/")[2];
-                // iden_pdg = "Temp#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "|" +
-                // len + "-TEMP135241";
-                for (String k : scoreByPDG.keySet()) {
-                    if (k.startsWith("Temp#" + CLAZZ) && k.contains(METHOD)
-                            && k.contains(line + "|" + col + "|" + len)) {
-                        iden_pdg = k;
-                        break;
-                    }
+            for (String k : scoreByPDG.keySet()) {
+                if (k.contains(line + "|" + col)) {
+                    iden_pdg = k;
+                    break;
                 }
             }
+ //           if (pos.split("/").length == 2) {
+ //               // iden_pdg = "Variable#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "-"
+ //               // + iden;
+ //               for (String k : scoreByPDG.keySet()) {
+ //                   if (k.startsWith("Variable#" + CLAZZ) && k.contains(METHOD) && k.contains(line + "|" + col)) {
+ //                       iden_pdg = k;
+ //                       break;
+ //                   }
+ //               }
+ //           } else if (pos.split("/").length == 3) {
+ //               String len = pos.split("/")[2];
+ //               // iden_pdg = "Temp#" + CLAZZ + "." + METHOD + ":" + line + "|" + col + "|" +
+ //               // len + "-TEMP135241";
+ //               for (String k : scoreByPDG.keySet()) {
+ //                   if (k.startsWith("Temp#" + CLAZZ) && k.contains(METHOD)
+ //                           && k.contains(line + "|" + col + "|" + len)) {
+ //                       iden_pdg = k;
+ //                       break;
+ //                   }
+ //               }
+ //           }
             // String iden_pdg2 = CLAZZ + "." + METHOD + ":" + line + "-" + iden;
             Double score_pdg = 1.0;
             if (scoreByPDG.containsKey(iden_pdg)) {
@@ -816,7 +822,6 @@ public class IntraGenTree {
             treeBuf.append(entry.getKey() + " "
                     + vname + " "
                     + entry.getValue() + " "
-                    + pdgscore + " "
                     + pdgscore2
                     + "\n");
         }
