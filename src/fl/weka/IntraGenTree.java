@@ -795,12 +795,29 @@ public class IntraGenTree {
                 }
             }
 
+            Double pdgscore2 = 1.0;
+            String loc = vname.split("-")[1];
+            String line = "", col = "";
+            if (loc.contains("{")) {
+                loc = loc.substring(loc.indexOf("{")+1, loc.indexOf("}"));
+                line = loc.split(";")[0].split("/")[0];
+                col = loc.split(";")[0].split("/")[1];
+            } else {
+                line = loc.split("/")[0];
+                col = loc.split("/")[1];
+            }
+            for (String k : scoreByPDG.keySet()) {
+                if (k.contains(line + "|" + col)){
+                    pdgscore2 = scoreByPDG.get(k);
+                    break;
+                }
+            }
+
             treeBuf.append(entry.getKey() + " "
                     + vname + " "
                     + entry.getValue() + " "
                     + pdgscore + " "
-                    + ((Double) entry.getValue())
-                            * scoreByName_afterAggre.get(attrMapRes.get(entry.getKey())).doubleValue()
+                    + pdgscore2
                     + "\n");
         }
 
